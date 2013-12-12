@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SameFileFinder", "SameFileFinder\SameFileFinder.csproj", "{C3415BD0-1FD5-4B81-B39F-E8DD4F088CA1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleSameFileFinder", "ConsoleSameFileFinder\ConsoleSameFileFinder.csproj", "{9A453FDC-4FD9-4040-BE1B-7B7B2BB1A62C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,6 +15,10 @@ Global
 		{C3415BD0-1FD5-4B81-B39F-E8DD4F088CA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C3415BD0-1FD5-4B81-B39F-E8DD4F088CA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C3415BD0-1FD5-4B81-B39F-E8DD4F088CA1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9A453FDC-4FD9-4040-BE1B-7B7B2BB1A62C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9A453FDC-4FD9-4040-BE1B-7B7B2BB1A62C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9A453FDC-4FD9-4040-BE1B-7B7B2BB1A62C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9A453FDC-4FD9-4040-BE1B-7B7B2BB1A62C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
