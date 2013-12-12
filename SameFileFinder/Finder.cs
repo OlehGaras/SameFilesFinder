@@ -20,7 +20,7 @@ namespace SameFileFinder
                     if (mas[j].Length > mas[j+1].Length)
                     {
                         FileInfo temp = mas[j];
-                        mas[i] = mas[j+1];
+                        mas[j] = mas[j+1];
                         mas[j+1] = temp;
                     }
                 }

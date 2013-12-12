@@ -12,7 +12,7 @@ namespace ConsoleSameFileFinder
         static void Main(string[] args)
         {
             IFinder f = new Finder();
-            f.FindGroupOfSameFiles(@"D:\folder");
+            f.FindGroupOfSameFiles(@"D:\downloads");
         }
     }
 }
