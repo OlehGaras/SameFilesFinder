@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -9,40 +10,12 @@ namespace SameFileFinder
 {
     public class Finder : IFinder
     {
-
-
-        private void Sort(FileInfo[] mas)
-        {
-            for (int i = 0; i < mas.Length; i++)
-            {
-                for (int j = 0; j < mas.Length - i - 1; j++)
-                {
-                    if (mas[j].Length > mas[j+1].Length)
-                    {
-                        FileInfo temp = mas[j];
-                        mas[j] = mas[j+1];
-                        mas[j+1] = temp;
-                    }
-                }
-            }
-        }
-
         public IFileGroup FindGroupOfSameFiles(string path)
         {
             DirectoryInfo di = new DirectoryInfo(path);
             FileInfo[] files = di.GetFiles("*.*", SearchOption.AllDirectories);
 
-            // string pathToCurrent = "", pathToNext = "";
-            // pathToCurrent = files[0].DirectoryName + @"\" + files[0].Name;
-            // pathToNext = files[1].DirectoryName + @"\" + files[1].Name;
-
-            // FileCompare(pathToCurrent, pathToNext);
-
-            // byte[] mas1 = File.ReadAllBytes(pathToCurrent);
-            // byte[] mas2 = File.ReadAllBytes(pathToNext);
-            //// filesInBytes.Add(File.ReadAllBytes(pathToCurrent));
-
-            Sort(files);
+            Array.Sort(files,(user1,user2)=>user1.Length.CompareTo(user2.Length));
 
             var uncheckedGroups = FormTheGroups(files);
             List<FileGroup> checkedGroups = new List<FileGroup>();
@@ -70,7 +43,6 @@ namespace SameFileFinder
         {
             List<FileGroup> groups = new List<FileGroup>();
 
-            bool changed = false;
             FileGroup gr = new FileGroup();
 
             long currentLength = files[0].Length;
@@ -106,7 +78,6 @@ namespace SameFileFinder
                 {
                     pathToCurrent = file.DirectoryName + @"\" + file.Name;
                     filesInBytes.Add(File.ReadAllBytes(pathToCurrent));
-                    //Console.WriteLine(file.Name);
                 }
             }
             for (int i = 0; i < filesInBytes.Count; i++)
@@ -121,10 +92,6 @@ namespace SameFileFinder
                 }
             }
             return result;
-        }
-
-        public void CompareWithAll(byte[] file, List<byte[]> files, FileGroup result)
-        {
         }
 
         private bool FileCompare(string file1, string file2)
