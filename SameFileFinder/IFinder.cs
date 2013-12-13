@@ -8,6 +8,6 @@ namespace SameFileFinder
 {
     public interface IFinder
     {
-        IFileGroup FindGroupOfSameFiles(string path);
+        List<IFileGroup> FindGroupOfSameFiles(string path);
     }
 }

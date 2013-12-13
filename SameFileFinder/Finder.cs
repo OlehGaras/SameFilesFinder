@@ -3,43 +3,77 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Remoting.Messaging;
+using System.Security;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace SameFileFinder
 {
     public class Finder : IFinder
     {
-        public IFileGroup FindGroupOfSameFiles(string path)
-        {
-            DirectoryInfo di = new DirectoryInfo(path);
-            FileInfo[] files = di.GetFiles("*.*", SearchOption.AllDirectories);
-
-            Array.Sort(files,(user1,user2)=>user1.Length.CompareTo(user2.Length));
-
-            var uncheckedGroups = FormTheGroups(files);
-            List<FileGroup> checkedGroups = new List<FileGroup>();
-            foreach (var group in uncheckedGroups)
+        void DirSearch(string dir,List<FileInfo>files )
+        {         
+            try
             {
-                var chechedGroup = CheckTheGroup(group);
-                if(chechedGroup != null)
-                checkedGroups.Add(chechedGroup);
-            }
-
-            if (checkedGroups.Count != 0)
-                for (int i = 0; i < checkedGroups.Count; i++)
+                DirectoryInfo di = new DirectoryInfo(dir);
+                List<FileInfo> filesInCurrentDirectory = di.GetFiles("*.*", SearchOption.TopDirectoryOnly).ToList();
+                List<DirectoryInfo> directoriesInCurrentDirectory = di.GetDirectories("*.*", SearchOption.TopDirectoryOnly).ToList();
+                foreach (FileInfo f in filesInCurrentDirectory)
+                    files.Add(f);
+                foreach (DirectoryInfo d in directoriesInCurrentDirectory)
                 {
-                    Console.WriteLine("Group " + (i + 1).ToString() + ":");
-                    checkedGroups[i].print();
+                    DirSearch(d.FullName,files);
                 }
-            else
-            {
-                Console.WriteLine("There arent same files at this folder");
             }
-            return null;
+            catch (DirectoryNotFoundException e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            catch (UnauthorizedAccessException e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            catch (IOException e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            catch (NotSupportedException e)
+            {
+                Console.WriteLine(e.Message);
+            }
+            catch (SecurityException e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+        public List<IFileGroup> FindGroupOfSameFiles(string path)
+        {
+            List<FileInfo> files = new List<FileInfo>();
+            DirSearch(path,files);
+
+            List<IFileGroup> checkedGroups = null;
+            
+            //DirectoryInfo di = new DirectoryInfo(path);
+            //FileInfo[] files = di.GetFiles("*.*", SearchOption.AllDirectories);
+            if (files.Count != 0)
+            {
+                files.Sort((file1, file2) => file1.Length.CompareTo(file2.Length));
+
+                var uncheckedGroups = FormTheGroups(files);
+                checkedGroups = new List<IFileGroup>();
+                foreach (var group in uncheckedGroups)
+                {
+                    var chechedGroup = CheckTheGroup(group);
+                    if (chechedGroup != null)
+                        checkedGroups.Add(chechedGroup);
+                }
+            }
+            return checkedGroups;
         }
 
-        public List<FileGroup> FormTheGroups(FileInfo[] files)
+        public List<FileGroup> FormTheGroups(List<FileInfo> files)
         {
             List<FileGroup> groups = new List<FileGroup>();
 
@@ -47,7 +81,7 @@ namespace SameFileFinder
 
             long currentLength = files[0].Length;
 
-            for (int i = 0; i < files.Length; i++)
+            for (int i = 0; i < files.Count; i++)
             {
                 if (files[i].Length > currentLength)
                 {
@@ -77,7 +111,27 @@ namespace SameFileFinder
                 foreach (var file in gr.m_Group)
                 {
                     pathToCurrent = file.DirectoryName + @"\" + file.Name;
-                    filesInBytes.Add(File.ReadAllBytes(pathToCurrent));
+                    try
+                    {
+                        filesInBytes.Add(File.ReadAllBytes(pathToCurrent));
+                    }
+                    catch (UnauthorizedAccessException e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                    catch (IOException e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                    catch (NotSupportedException e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                    catch (SecurityException e)
+                    {
+                        Console.WriteLine(e.Message);
+                    }
+                    
                 }
             }
             for (int i = 0; i < filesInBytes.Count; i++)
@@ -93,57 +147,5 @@ namespace SameFileFinder
             }
             return result;
         }
-
-        private bool FileCompare(string file1, string file2)
-        {
-            int file1byte;
-            int file2byte;
-            FileStream fs1;
-            FileStream fs2;
-
-            // Determine if the same file was referenced two times.
-            if (file1 == file2)
-            {
-                // Return true to indicate that the files are the same.
-                return true;
-            }
-
-            // Open the two files.
-            fs1 = new FileStream(file1, FileMode.Open);
-            fs2 = new FileStream(file2, FileMode.Open);
-
-            // Check the file sizes. If they are not the same, the files 
-            // are not the same.
-            if (fs1.Length != fs2.Length)
-            {
-                // Close the file
-                fs1.Close();
-                fs2.Close();
-
-                // Return false to indicate files are different
-                return false;
-            }
-
-            // Read and compare a byte from each file until either a
-            // non-matching set of bytes is found or until the end of
-            // file1 is reached.
-            do
-            {
-                // Read one byte from each file.
-                file1byte = fs1.ReadByte();
-                file2byte = fs2.ReadByte();
-            }
-            while ((file1byte == file2byte) && (file1byte != -1));
-
-            // Close the files.
-            fs1.Close();
-            fs2.Close();
-
-            // Return the success of the comparison. "file1byte" is 
-            // equal to "file2byte" at this point only if the files are 
-            // the same.
-            return ((file1byte - file2byte) == 0);
-        }
-
     }
 }
