@@ -12,22 +12,18 @@ namespace ConsoleSameFileFinder
         static void Main(string[] args)
         {
             IFinder f = new Finder();
-            var checkedGroups = f.FindGroupOfSameFiles(@"D:\folder");
-            if (checkedGroups != null)
+            var checkedGroups = f.FindGroupOfSameFiles(@"D:\folder2");
+            if (checkedGroups.Count == 0)
             {
-                if (checkedGroups.Count != 0)
-                {
-                    for (int i = 0; i < checkedGroups.Count; i++)
-                    {
-                        Console.WriteLine("Group " + (i + 1).ToString() + ":");
-                        checkedGroups[i].print();
-                    }
-                }
-                else
-                {
-                    Console.WriteLine("There arent same files at this folder");
-                }
+                Console.WriteLine("There arent same files at this folder");
+                return;
             }
+            for (int i = 0; i < checkedGroups.Count; i++)
+            {
+                Console.WriteLine("Group " + (i + 1).ToString() + ":");
+                Console.WriteLine(checkedGroups[i].ToString());
+            }
+
         }
     }
 }

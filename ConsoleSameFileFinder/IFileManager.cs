@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SameFileFinder
+namespace ConsoleSameFileFinder
 {
-    public interface IFileGroup
+    public interface IFileManager
     {
-        List<FileInfo> Group { get; set; }
     }
 }
