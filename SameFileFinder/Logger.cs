@@ -73,6 +73,7 @@ namespace SameFileFinder
 
         public void Write(string format, params string[] messages)
         {
+            //logger.Write(string.Format("{0},{1}","123","234","345"));
             throw new NotImplementedException();
         }
     }

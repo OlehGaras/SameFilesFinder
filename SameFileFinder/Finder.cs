@@ -6,10 +6,7 @@ using System.Linq;
 using System.Runtime.Remoting.Messaging;
 using System.Security;
 using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
+using System.Collections;
 
 namespace SameFileFinder
 {
@@ -35,7 +32,7 @@ namespace SameFileFinder
             var groups = new Dictionary<string, FileGroup>();
             for (int i = 0; i < pathes.Count; i++)
             {
-                string hash = HashTheFile(pathes[i],logger);
+                string hash = HashTheFile(pathes[i], logger);
                 if (hash != null)
                 {
                     if (!groups.ContainsKey(hash))
@@ -45,7 +42,7 @@ namespace SameFileFinder
                     groups[hash].Add(fileManager.Files[i]);
                 }
             }
-
+            
             return groups;
         }
 
