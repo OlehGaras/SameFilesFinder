@@ -38,7 +38,7 @@ namespace SameFileFinder
             }
         }
 
-        public void WritetoFile(Exception e)
+        public void WriteToFile(Exception e)
         {
             AppAbort();
             string message = "Exception:\n" + e.Message;
@@ -66,8 +66,9 @@ namespace SameFileFinder
         {
             using (StreamWriter writer = new StreamWriter(new FileStream(m_path, FileMode.Append)) { AutoFlush = true })
             {
+                writer.WriteLine("\t APPLICATION END");
                 writer.WriteLine(DateTime.Now.ToLongDateString());
-                writer.WriteLine("Application End at" + DateTime.Now.ToLongTimeString());
+                writer.WriteLine("Application end at " + DateTime.Now.ToLongTimeString());
             }
         }
 

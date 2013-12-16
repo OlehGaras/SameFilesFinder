@@ -25,7 +25,7 @@ namespace SameFileFinder
                 }
                 catch (Exception e)
                 {
-                    logger.WritetoFile(e);
+                    logger.WriteToFile(e);
                 }
             }
 
@@ -58,7 +58,7 @@ namespace SameFileFinder
             }
             catch (Exception e)
             {
-                logger.WritetoFile(e);
+                logger.WriteToFile(e);
             }
             return null;
         }

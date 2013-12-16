@@ -34,13 +34,15 @@ namespace ConsoleSameFileFinder
                 }
 
                 string path = Args[1];
-                var groups = f.FindGroupOfSameFiles(path, Logger);
-                if (groups.Count == 0)
+                Task<Dictionary<string ,FileGroup>> calculate = new Task<Dictionary<string, FileGroup>>(()=>f.FindGroupOfSameFiles(path,Logger));
+                calculate.Start();
+                //var groups = f.FindGroupOfSameFiles(path, Logger);
+                if (calculate.Result.Count == 0)
                 {
                     Console.WriteLine("There arent same files at this folder or you wrote bad path");
                     return;
                 }
-                PrintGroups(groups);
+                PrintGroups(calculate.Result);
             }
             else
             {
