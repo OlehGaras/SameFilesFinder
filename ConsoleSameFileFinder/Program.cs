@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SameFileFinder;
 
 namespace ConsoleSameFileFinder
@@ -11,19 +7,27 @@ namespace ConsoleSameFileFinder
     {
         static void Main(string[] args)
         {
-            IFinder f = new Finder();
-            var checkedGroups = f.FindGroupOfSameFiles(@"D:\folder2");
-            if (checkedGroups.Count == 0)
+            var logger = new SameFileFinder.Logger("log.txt");
+            logger.AppStart();
+            //logger.Write(string.Format("{0},{1}","123","234","345"));
+            var f = new Finder();
+            var groups = f.FindGroupOfSameFiles(@"D:\",logger);
+            if (groups.Count == 0)
             {
                 Console.WriteLine("There arent same files at this folder");
                 return;
             }
-            for (int i = 0; i < checkedGroups.Count; i++)
+            int i = 0;
+            foreach (var fileGroup in groups)
             {
-                Console.WriteLine("Group " + (i + 1).ToString() + ":");
-                Console.WriteLine(checkedGroups[i].ToString());
+                if (fileGroup.Value.Group.Count > 1)
+                {
+                    Console.WriteLine("Group " + (i + 1).ToString() + ":");
+                    Console.WriteLine(fileGroup.Value.ToString());
+                    i++;
+                }
             }
-
+            logger.AppEnd();
         }
     }
 }

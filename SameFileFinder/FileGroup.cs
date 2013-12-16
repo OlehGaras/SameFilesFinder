@@ -16,15 +16,19 @@ namespace SameFileFinder
             Group = new List<FileInfo>();
         }
 
-
         public override string ToString()
         {
             var res = string.Empty;
             foreach (var file in Group)
             {
-                res += "\t" + file.Name; 
+                res += "\t" + file.Name + "\n"; 
             }
             return res;
+        }
+
+        public void Add(FileInfo file)
+        {
+            Group.Add(file);
         }
     }
 }

@@ -4,9 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ConsoleSameFileFinder
+namespace SameFileFinder
 {
     public interface IFileManager
     {
+        void DirSearch(string dir,Logger logger);
     }
 }

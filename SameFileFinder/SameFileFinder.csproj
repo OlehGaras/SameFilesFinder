@@ -42,8 +42,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FileGroup.cs" />
+    <Compile Include="FileManager.cs" />
     <Compile Include="Finder.cs" />
     <Compile Include="IFileGroup.cs" />
+    <Compile Include="IFileManager.cs" />
     <Compile Include="IFinder.cs" />
     <Compile Include="Logger.cs" />
     <Compile Include="ILogger.cs" />
