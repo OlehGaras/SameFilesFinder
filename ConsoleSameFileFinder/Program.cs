@@ -9,7 +9,9 @@ namespace ConsoleSameFileFinder
         {
             var logger = new SameFileFinder.Logger("log.txt");
             var manager = new ConsoleManager(args, logger);
-            manager.Execute();
+            FileManager fileManager = new FileManager();
+            Finder finder = new Finder();
+            manager.Execute(fileManager,finder);
         }
     }
 }

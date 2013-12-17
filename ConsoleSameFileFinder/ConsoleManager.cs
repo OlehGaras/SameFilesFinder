@@ -16,12 +16,12 @@ namespace ConsoleSameFileFinder
         {
             Args = args;
             Logger = logger;
-            Logger.AppStart();  
+            Logger.Write("APPLICATION STARTED");  
         }
 
-        public void Execute()
+        public void Execute(FileManager fileManager, Finder finder)
         {         
-            var f = new Finder();
+            //var f = new Finder();
             if (Args.Length == 2)
             {
                 switch (Args[0])
@@ -34,7 +34,7 @@ namespace ConsoleSameFileFinder
                 }
 
                 string path = Args[1];
-                Task<Dictionary<string ,FileGroup>> calculate = new Task<Dictionary<string, FileGroup>>(()=>f.FindGroupOfSameFiles(path,Logger));
+                Task<Dictionary<string ,FileGroup>> calculate = new Task<Dictionary<string, FileGroup>>(()=>finder.FindGroupOfSameFiles(path,Logger,fileManager));
                 calculate.Start();
                 //var groups = f.FindGroupOfSameFiles(path, Logger);
                 if (calculate.Result.Count == 0)
@@ -48,7 +48,7 @@ namespace ConsoleSameFileFinder
             {
                 Console.WriteLine("This command is not recognized as an internal or external command, operable program or batch file.");
             }
-            Logger.AppEnd();
+            Logger.Write("APPLICATION ENDED");
         }
 
         public void PrintGroups(Dictionary<string,FileGroup> groups)

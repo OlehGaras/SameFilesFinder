@@ -10,15 +10,9 @@ namespace SameFileFinder
 {
     public class FileManager : IFileManager
     {
-        public List<FileInfo> Files { get; set; }
-
-        public FileManager()
+        public List<FileInfo> DirSearch(string dir,Logger logger)
         {
-            Files = new List<FileInfo>();
-        }
-
-        public void DirSearch(string dir,Logger logger)
-        {
+            var files = new List<FileInfo>();
             try
             {
                 var di = new DirectoryInfo(dir);
@@ -26,16 +20,17 @@ namespace SameFileFinder
                 var directoriesInCurrentDirectory =
                     di.GetDirectories("*.*", SearchOption.TopDirectoryOnly).ToList();
                 foreach (FileInfo f in filesInCurrentDirectory)
-                    Files.Add(f);
+                    files.Add(f);
                 foreach (DirectoryInfo d in directoriesInCurrentDirectory)
                 {
-                    DirSearch(d.FullName,logger);
+                    files.AddRange(DirSearch(d.FullName,logger));
                 }
             }
             catch (Exception e)
             {
-                logger.WriteToFile(e);
+                logger.Write(e);
             }
+            return files;
         }
     }
 }

@@ -8,9 +8,7 @@ namespace SameFileFinder
 {
     public interface ILogger
     {
-        void AppStart();
-        void WriteToFile(Exception e);
-        void AppAbort();
-        void AppEnd();
+        void Write(Exception e);
+        void Write(string message);
     }
 }
