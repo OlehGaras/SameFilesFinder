@@ -19,7 +19,7 @@ namespace ConsoleSameFileFinder
             Logger.Write("APPLICATION STARTED");  
         }
 
-        public void Execute(FileManager fileManager, Finder finder)
+        public void Execute(FileManager fileManager, Finder finder,Logger logger)
         {         
             //var f = new Finder();
             if (Args.Length == 2)
@@ -34,7 +34,7 @@ namespace ConsoleSameFileFinder
                 }
 
                 string path = Args[1];
-                Task<Dictionary<string ,FileGroup>> calculate = new Task<Dictionary<string, FileGroup>>(()=>finder.FindGroupOfSameFiles(path,Logger,fileManager));
+                var calculate = new Task<List<FileGroup>>(()=>finder.FindGroupOfSameFiles(path,Logger,fileManager));
                 calculate.Start();
                 //var groups = f.FindGroupOfSameFiles(path, Logger);
                 if (calculate.Result.Count == 0)
@@ -51,15 +51,15 @@ namespace ConsoleSameFileFinder
             Logger.Write("APPLICATION ENDED");
         }
 
-        public void PrintGroups(Dictionary<string,FileGroup> groups)
+        public void PrintGroups(List<FileGroup> groups)
         {
             int i = 0;
             foreach (var fileGroup in groups)
             {
-                if (fileGroup.Value.Group.Count > 1)
+                if (fileGroup.Group.Count > 1)
                 {
                     Console.WriteLine("Group " + (i + 1).ToString() + ":");
-                    Console.WriteLine(fileGroup.Value.ToString());
+                    Console.WriteLine(fileGroup.ToString());
                     i++;
                 }
             }

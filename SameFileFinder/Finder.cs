@@ -12,57 +12,7 @@ namespace SameFileFinder
 {
     public class Finder : IFinder
     {
-        public Dictionary<string, FileGroup> FindGroupOfSameFiles(string path, Logger logger, FileManager fileManager)
-        {
-            var files = fileManager.DirSearch(path, logger);
-            var pathes = new List<string>();
-            foreach (var file in files)
-            {
-                try
-                {
-                    pathes.Add(file.DirectoryName + @"\" + file.Name);
-                }
-                catch (Exception e)
-                {
-                    logger.Write(e);
-                }
-            }
-
-            var groups = new Dictionary<string, FileGroup>();
-            for (int i = 0; i < pathes.Count; i++)
-            {
-                string hash = HashTheFile(pathes[i], logger);
-                if (hash != null)
-                {
-                    if (!groups.ContainsKey(hash))
-                    {
-                        groups.Add(hash, new FileGroup());
-                    }
-                    groups[hash].Add(files[i]);
-                }
-            }
-
-            return groups;
-        }
-
-        public string HashTheFile(string path, Logger logger)
-        {
-            HashAlgorithm ha = HashAlgorithm.Create();
-            try
-            {
-                var f1 = new FileStream(path, FileMode.Open);
-                byte[] hash1 = ha.ComputeHash(f1);
-                f1.Close();
-                return BitConverter.ToString(hash1);
-            }
-            catch (Exception e)
-            {
-                logger.Write(e);
-            }
-            return null;
-        }
-
-        public Int32 HashTheFile2(string path, Logger logger)
+        public Int32 HashTheFile(string path, Logger logger)
         {
             HashAlgorithm ha = HashAlgorithm.Create();
             try
@@ -79,27 +29,7 @@ namespace SameFileFinder
             return 0;
         }
 
-        public bool FileComparer(string path1, string path2)
-        {
-            HashAlgorithm ha = HashAlgorithm.Create();
-            var f1 = new FileStream(path1, FileMode.Open);
-            var f2 = new FileStream(path2, FileMode.Open);
-            /* Calculate Hash */
-            byte[] hash1 = ha.ComputeHash(f1);
-            byte[] hash2 = ha.ComputeHash(f2);
-            f1.Close();
-            f2.Close();
-            /* Show Hash in TextBoxes */
-            string sHash1 = BitConverter.ToString(hash1);
-            string sHash2 = BitConverter.ToString(hash2);
-            /* Compare the hash and Show Message box */
-            if (sHash1 == sHash2)
-            {
-                return true;
-            }
-            return false;
-        }
-        public List<FileGroup> FindGroupOfSameFiles(string path, FileManager fileManager, Logger logger)
+        public List<FileGroup> FindGroupOfSameFiles(string path, Logger logger, FileManager fileManager)
         {
             var files = fileManager.DirSearch(path, logger);
 
@@ -108,7 +38,7 @@ namespace SameFileFinder
                 files.Sort((file1, file2) => file1.Length.CompareTo(file2.Length));
 
                 var uncheckedGroups = FormTheGroupsWithSameLength(files);
-                var checkedGroups = new List<IFileGroup>();
+                var checkedGroups = new List<FileGroup>();
                 foreach (var group in uncheckedGroups)
                 {
                     var chechedGroup = CheckTheGroup(group, logger);
@@ -116,33 +46,33 @@ namespace SameFileFinder
                         checkedGroups.AddRange(chechedGroup);
                 }
 
-                var RESULT = new List<FileGroup>();
+                var resultGroups = new List<FileGroup>();
                 foreach (var group in checkedGroups)
                 {
                     var chechedGroup = CheckTheGroup(group, logger);
                     if (chechedGroup != null)
-                        RESULT.AddRange(chechedGroup);
+                        resultGroups.AddRange(chechedGroup);
                 }
-                return RESULT;
+                return resultGroups;
             }
             return null;
         }
 
-        public List<FileGroup> FormTheGroupsWithSameHash(List<FileInfo> files, List<Int32> hashedPathes, Logger logger)
+        public List<FileGroup> FormTheGroupsWithSameHash(List<FileInfo> files, List<Int32> hashedFiles)
         {
             var groups = new List<FileGroup>();
             var gr = new FileGroup();
 
-            Int64 current = hashedPathes[0];
+            Int32 current = hashedFiles[0];
 
             for (int i = 0; i < files.Count; i++)
             {
-                if (hashedPathes[i] > current)
+                if (hashedFiles[i] > current)
                 {
                     if (gr.Group.Count > 1)
                         groups.Add(gr);
                     gr = new FileGroup();
-                    current = hashedPathes[i];
+                    current = hashedFiles[i];
                 }
                 gr.Add(files[i]);
             }
@@ -172,29 +102,23 @@ namespace SameFileFinder
             return groups;
         }
 
-        public List<FileGroup> CheckTheGroup(IFileGroup group, Logger logger)
+        public List<FileGroup> CheckTheGroup(FileGroup group, Logger logger)
         {
             var resultList = new List<FileGroup>();
-            var r = new List<FileInfo>();
-            var pathes = new List<string>();
-            var gr = (FileGroup)group;
+            var files = group.Group;
 
-            if (gr.Group.Count == 1)
+            if (group.Group.Count == 1)
             {
                 return null;
             }
 
-            foreach (var file in gr.Group)
-            {
-                r.Add(file);
-            }
             var hashedPathes = new List<Int32>();
 
-            foreach (var file in gr.Group)
+            foreach (var file in files)
             {
                 try
                 {
-                    hashedPathes.Add(HashTheFile2(file.DirectoryName + @"\" + file.Name, logger));
+                    hashedPathes.Add(HashTheFile(file.DirectoryName + @"\" + file.Name, logger));
                 }
                 catch (Exception e)
                 {
@@ -202,29 +126,26 @@ namespace SameFileFinder
                 }
             }
 
-            r.Sort((file1, file2) =>
+            files.Sort((file1, file2) =>
                 {
                     return
-                        HashTheFile2(file1.DirectoryName + @"\" + file1.Name, logger)
-                            .CompareTo(HashTheFile2(file2.DirectoryName + @"\" + file2.Name, logger));
+                        HashTheFile(file1.DirectoryName + @"\" + file1.Name, logger)
+                            .CompareTo(HashTheFile(file2.DirectoryName + @"\" + file2.Name, logger));
                 });
 
             //we have the groups of files with same length and same hash
-            resultList = FormTheGroupsWithSameHash(r, r.ConvertAll((file) => HashTheFile2(file.DirectoryName + @"\" + file.Name, logger)), logger);
-
-
-            var RESULT = new List<FileGroup>();
-            foreach (var res in resultList)
-            {
-                RESULT.AddRange(CheckTheGroup2(res, logger));
-            }
+            var newGroups = FormTheGroupsWithSameHash(files, files.ConvertAll((file) => HashTheFile(file.DirectoryName + @"\" + file.Name, logger)));
 
             //now we can to compare files in these groups as a byte[] arrays
+            foreach (var gr in newGroups)
+            {
+                resultList.AddRange(CompareFiles(gr, logger));
+            }
 
-            return RESULT;
+            return resultList;
         }
 
-        public List<FileGroup> CheckTheGroup2(IFileGroup group, Logger logger)
+        public List<FileGroup> CompareFiles(IFileGroup group, Logger logger)
         {
             List<byte[]> filesInBytes = new List<byte[]>();
 
@@ -235,23 +156,21 @@ namespace SameFileFinder
             {
                 return null;
             }
-            else
-            {
-                string pathToCurrent = "";
 
-                foreach (var file in gr.Group)
+            string pathToCurrent = "";
+            foreach (var file in gr.Group)
+            {
+                pathToCurrent = file.DirectoryName + @"\" + file.Name;
+                try
                 {
-                    pathToCurrent = file.DirectoryName + @"\" + file.Name;
-                    try
-                    {
-                        filesInBytes.Add(File.ReadAllBytes(pathToCurrent));
-                    }
-                    catch (Exception e)
-                    {
-                        logger.Write(e);
-                    }
+                    filesInBytes.Add(File.ReadAllBytes(pathToCurrent));
+                }
+                catch (Exception e)
+                {
+                    logger.Write(e);
                 }
             }
+
             byte[] currentValue = new byte[1];
             for (int i = 0; i < filesInBytes.Count; i++)
             {
