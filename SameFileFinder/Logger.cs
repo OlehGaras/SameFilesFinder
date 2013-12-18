@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 
 
 namespace SameFileFinder
@@ -7,6 +8,8 @@ namespace SameFileFinder
     public class Logger : ILogger
     {
         private string m_Path;
+        private static readonly object m_SynchObject = new object();
+
         public Logger(string file_path)
         {
             string year = DateTime.Now.Year.ToString();
@@ -40,10 +43,14 @@ namespace SameFileFinder
 
         public void Write(string message)
         {
-            using (StreamWriter writer = new StreamWriter(new FileStream(m_Path, FileMode.Append)) { AutoFlush = true })
+            lock (m_SynchObject)
             {
-                writer.WriteLine(DateTime.Now.ToLongDateString() + DateTime.Now.ToLongTimeString());
-                writer.WriteLine(message);
+                using (
+                    StreamWriter writer = new StreamWriter(new FileStream(m_Path, FileMode.Append)) {AutoFlush = true})
+                {
+                    writer.WriteLine(DateTime.Now.ToLongDateString() + DateTime.Now.ToLongTimeString());
+                    writer.WriteLine(message);
+                }
             }
         }
 

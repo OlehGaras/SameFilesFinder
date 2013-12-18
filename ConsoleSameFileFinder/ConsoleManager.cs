@@ -19,9 +19,8 @@ namespace ConsoleSameFileFinder
             Logger.Write("APPLICATION STARTED");  
         }
 
-        public void Execute(FileManager fileManager, Finder finder,Logger logger)
-        {         
-            //var f = new Finder();
+        public void Execute(IFileManager fileManager, IFinder finder,ILogger logger)
+        {  
             if (Args.Length == 2)
             {
                 switch (Args[0])
@@ -34,15 +33,14 @@ namespace ConsoleSameFileFinder
                 }
 
                 string path = Args[1];
-                var calculate = new Task<List<FileGroup>>(()=>finder.FindGroupOfSameFiles(path,Logger,fileManager));
-                calculate.Start();
-                //var groups = f.FindGroupOfSameFiles(path, Logger);
-                if (calculate.Result.Count == 0)
+                var groups = finder.FindGroupOfSameFiles(path, Logger, fileManager);
+                
+                if (groups.Count == 0)
                 {
                     Console.WriteLine("There arent same files at this folder or you wrote bad path");
                     return;
                 }
-                PrintGroups(calculate.Result);
+                PrintGroups(groups);
             }
             else
             {

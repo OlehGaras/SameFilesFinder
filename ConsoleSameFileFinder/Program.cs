@@ -11,7 +11,7 @@ namespace ConsoleSameFileFinder
             var manager = new ConsoleManager(args, logger);
             var fileManager = new FileManager();
             var finder = new Finder();
-            finder.FindGroupOfSameFiles("C:\\Windows", logger, fileManager);
+            //var groups = finder.FindGroupOfSameFiles("C:\\Users", logger, fileManager);
             manager.Execute(fileManager,finder,logger);        
         }
     }

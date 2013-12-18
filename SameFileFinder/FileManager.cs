@@ -10,7 +10,7 @@ namespace SameFileFinder
 {
     public class FileManager : IFileManager
     {
-        public List<FileInfo> DirSearch(string dir,Logger logger)
+        public List<FileInfo> DirSearch(string dir,ILogger logger)
         {
             var files = new List<FileInfo>();
             try

@@ -9,6 +9,6 @@ namespace SameFileFinder
 {
     public interface IFileManager
     {
-        List<FileInfo> DirSearch(string dir,Logger logger);
+        List<FileInfo> DirSearch(string dir,ILogger logger);
     }
 }
