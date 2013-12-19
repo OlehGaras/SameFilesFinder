@@ -10,9 +10,9 @@ namespace SameFileFinder
 {
     public class FileManager : IFileManager
     {
-        public List<FileInfo> DirSearch(string dir,ILogger logger)
+        public List<MyFileInfo> DirSearch(string dir,ILogger logger)
         {
-            var files = new List<FileInfo>();
+            var files = new List<MyFileInfo>();
             try
             {
                 var di = new DirectoryInfo(dir);
@@ -20,7 +20,7 @@ namespace SameFileFinder
                 var directoriesInCurrentDirectory =
                     di.GetDirectories("*.*", SearchOption.TopDirectoryOnly).ToList();
                 foreach (FileInfo f in filesInCurrentDirectory)
-                    files.Add(f);
+                    files.Add(new MyFileInfo(f,0));
                 foreach (DirectoryInfo d in directoriesInCurrentDirectory)
                 {
                     files.AddRange(DirSearch(d.FullName,logger));

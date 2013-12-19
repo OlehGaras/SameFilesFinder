@@ -9,11 +9,11 @@ namespace SameFileFinder
 {
     public class FileGroup : IFileGroup
     {
-        public List<FileInfo> Group { get; set; }
+        public List<MyFileInfo> Group { get; set; }
 
         public FileGroup()
         {
-            Group = new List<FileInfo>();
+            Group = new List<MyFileInfo>();
         }
 
         public override string ToString()
@@ -21,12 +21,12 @@ namespace SameFileFinder
             var res = string.Empty;
             foreach (var file in Group)
             {
-                res += "\t" + file.Name + "\n"; 
+                res += "\t" + file.Information.Name + "\n"; 
             }
             return res;
         }
 
-        public void Add(FileInfo file)
+        public void Add(MyFileInfo file)
         {
             Group.Add(file);
         }

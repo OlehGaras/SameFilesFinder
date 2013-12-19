@@ -1,13 +1,9 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
-using System.Security;
 using System.Security.Cryptography;
-using System.Collections;
-using System.Threading.Tasks;
+
 
 namespace SameFileFinder
 {
@@ -36,11 +32,10 @@ namespace SameFileFinder
             if (files.Count == 0)
                 return null;
 
-            files.Sort((file1, file2) => file1.Length.CompareTo(file2.Length));
+            files.Sort((file1, file2) => file1.Information.Length.CompareTo(file2.Information.Length));
 
-            var groupsWithSameLength = FormTheGroupsWithSameLength(files);
+            var groupsWithSameLength = FormTheGroup(files, f => f.Information.Length);
             var checkedGroups = new List<FileGroup>();
-
 
             foreach (var group in groupsWithSameLength)
             {
@@ -51,48 +46,26 @@ namespace SameFileFinder
             return checkedGroups;
         }
 
-        public List<FileGroup> FormTheGroupsWithSameHash(List<FileInfo> files, List<Int64> hashedFiles)
+        public List<FileGroup> FormTheGroup<T>(List<MyFileInfo> files, Func<MyFileInfo, T> selector)
+            where T : IComparable<T>
         {
             var groups = new List<FileGroup>();
             var gr = new FileGroup();
 
-            Int64 current = hashedFiles[0];
+            T currentValue = selector(files[0]);
             for (int i = 0; i < files.Count; i++)
             {
-                if (hashedFiles[i] > current)
+                if (selector(files[i]).CompareTo(currentValue) != 0)
                 {
                     if (gr.Group.Count > 1)
                         groups.Add(gr);
                     gr = new FileGroup();
-                    current = hashedFiles[i];
+                    currentValue = selector(files[i]);
                 }
                 gr.Add(files[i]);
             }
             if (gr.Group.Count > 1)
                 groups.Add(gr);
-
-            return groups;
-        }
-
-        public List<FileGroup> FormTheGroupsWithSameLength(List<FileInfo> files)
-        {
-            var groups = new List<FileGroup>();
-            var gr = new FileGroup();
-
-            long currentLength = files[0].Length;
-
-            for (int i = 0; i < files.Count; i++)
-            {
-                if (files[i].Length > currentLength)
-                {
-                    if (gr.Group.Count > 1)
-                        groups.Add(gr);
-                    gr = new FileGroup();
-                    currentLength = files[i].Length;
-                }
-                gr.Add(files[i]);
-            }
-            groups.Add(gr);
             return groups;
         }
 
@@ -106,16 +79,19 @@ namespace SameFileFinder
                 return null;
             }
 
+            for (int i=0;i<files.Count;i++)
+            {
+                files[i].Hash = HashTheFile(files[i].Information.DirectoryName + @"\" + files[i].Information.Name, logger);
+            }
+
             files.Sort((file1, file2) =>
             {
-                return
-                    HashTheFile(file1.DirectoryName + @"\" + file1.Name, logger)
-                        .CompareTo(HashTheFile(file2.DirectoryName + @"\" + file2.Name, logger));
+                return file1.Hash.CompareTo(file2.Hash);
             });
 
 
-            var groupsWithSameHash = FormTheGroupsWithSameHash(files, files.ConvertAll((file) => HashTheFile(file.DirectoryName + @"\" + file.Name, logger)));
-            
+            var groupsWithSameHash = FormTheGroup(files,file=>file.Hash);
+
             foreach (var gr in groupsWithSameHash)
             {
                 resultList.AddRange(CompareFiles(gr, logger));
@@ -130,29 +106,15 @@ namespace SameFileFinder
                 return null;
             }
 
-            var filesInBytes = new List<byte[]>();
-            string pathToCurrent = "";
-            foreach (var file in group.Group)
-            {
-                pathToCurrent = file.DirectoryName + @"\" + file.Name;
-                try
-                {
-                    filesInBytes.Add(File.ReadAllBytes(pathToCurrent));
-                }
-                catch (Exception e)
-                {
-                    logger.Write(e);
-                }
-            }
-
+            var files = group.Group;
+            MyFileInfo currentValue = null;
             var resultList = new List<FileGroup>();
             var result = new FileGroup();
-            byte[] currentValue = new byte[1];
-            for (int i = 0; i < filesInBytes.Count; i++)
+            for (int i = 0; i < files.Count; i++)
             {
-                if (!filesInBytes[i].SequenceEqual(currentValue))
+                if (!ByteCompare(files[i], currentValue, logger))
                 {
-                    currentValue = filesInBytes[i];
+                    currentValue = files[i];
                     if (result.Group.Count > 1)
                         resultList.Add(result);
                     result = new FileGroup();
@@ -161,18 +123,56 @@ namespace SameFileFinder
                 {
                     continue;
                 }
-                result.Add(group.Group[i]);
-                for (int j = i + 1; j < filesInBytes.Count; j++)
+                result.Add(files[i]);
+                for (int j = i + 1; j < group.Group.Count; j++)
                 {
-                    if (filesInBytes[i].SequenceEqual(filesInBytes[j]))
+                    if (ByteCompare(files[i], files[j], logger))
                     {
-                        result.Add(group.Group[j]);
+                        result.Add(files[j]);
                     }
                 }
             }
             if (result.Group.Count > 1)
                 resultList.Add(result);
             return resultList;
+        }
+        private bool ByteCompare(MyFileInfo file1, MyFileInfo file2, ILogger logger)
+        {
+            if (file1 == null || file2 == null)
+                return false;
+            try
+            {
+                FileStream firstFile = new FileStream(file1.Information.DirectoryName + @"\" + file1.Information.Name,
+                                                      FileMode.Open, FileAccess.Read),
+                           secondFile = new FileStream(file2.Information.DirectoryName + @"\" + file2.Information.Name,
+                                                       FileMode.Open, FileAccess.Read);
+                byte[] byte1 = new byte[4096];
+                byte[] byte2 = new byte[4096];
+
+                int res1, res2;
+                do
+                {
+                    res1 = firstFile.Read(byte1, 0, byte1.Length);
+                    res2 = secondFile.Read(byte2, 0, byte2.Length);
+
+                    for (int i = 0; i < byte1.Length; i++)
+                    {
+                        if (byte1[i] != byte2[i])
+                        {
+                            return false;
+                        }
+
+                    }
+                }
+                while (res1 != 0 && res2 != 0);
+
+                return true;
+            }
+            catch (Exception e)
+            {
+                logger.Write(e);
+            }
+            return false;
         }
     }
 }

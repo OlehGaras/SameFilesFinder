@@ -41,6 +41,7 @@ namespace ConsoleSameFileFinder
                     return;
                 }
                 PrintGroups(groups);
+                Console.WriteLine(groups.Count);
             }
             else
             {
