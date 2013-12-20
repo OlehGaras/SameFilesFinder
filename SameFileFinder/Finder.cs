@@ -31,18 +31,24 @@ namespace SameFileFinder
             var files = fileManager.DirSearch(path, logger);
             if (files.Count == 0)
                 return null;
-
             files.Sort((file1, file2) => file1.Information.Length.CompareTo(file2.Information.Length));
 
             var groupsWithSameLength = FormTheGroup(files, f => f.Information.Length);
             var checkedGroups = new List<FileGroup>();
 
-            foreach (var group in groupsWithSameLength)
+            var query = groupsWithSameLength.AsParallel().Select(group => CheckTheGroup(group, logger));
+            foreach (var group in query)
             {
-                var chechedGroup = CheckTheGroup(group, logger);
-                if (chechedGroup != null)
-                    checkedGroups.AddRange(chechedGroup);
+                if (group != null)
+                    checkedGroups.AddRange(group);
             }
+
+            //foreach (var group in groupsWithSameLength)
+            //{
+            //    var chechedGroup = CheckTheGroup(group, logger);
+            //    if (chechedGroup != null)
+            //        checkedGroups.AddRange(chechedGroup);
+            //}
             return checkedGroups;
         }
 
@@ -79,7 +85,13 @@ namespace SameFileFinder
                 return null;
             }
 
-            for (int i=0;i<files.Count;i++)
+            //var hash = files.AsParallel().AsOrdered().Select(file => HashTheFile(file.Information.DirectoryName + @"\" + file.Information.Name, logger)).ToArray();
+
+            //for (int i = 0; i < files.Count; i++)
+            //{
+            //    files[i].Hash = hash[i];
+            //}
+            for (int i = 0; i < files.Count; i++)
             {
                 files[i].Hash = HashTheFile(files[i].Information.DirectoryName + @"\" + files[i].Information.Name, logger);
             }
@@ -90,12 +102,18 @@ namespace SameFileFinder
             });
 
 
-            var groupsWithSameHash = FormTheGroup(files,file=>file.Hash);
+            var groupsWithSameHash = FormTheGroup(files, file => file.Hash);
 
-            foreach (var gr in groupsWithSameHash)
+            var query = groupsWithSameHash.AsParallel().Select(gr => CompareFiles(gr, logger));
+            foreach (var gr in query)
             {
-                resultList.AddRange(CompareFiles(gr, logger));
+                resultList.AddRange(gr);
             }
+
+            //foreach (var gr in groupsWithSameHash)
+            //{
+            //    resultList.AddRange(CompareFiles(gr, logger));
+            //}
             return resultList;
         }
 

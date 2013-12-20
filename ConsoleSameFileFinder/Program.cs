@@ -8,9 +8,9 @@ namespace ConsoleSameFileFinder
         static void Main(string[] args)
         {
             var logger = new SameFileFinder.Logger("log.txt");
-            //args = new string[2];
-            //args[0] = "--dir";
-            //args[1] = "C:\\Users";
+            args = new string[2];
+            args[0] = "--dir";
+            args[1] = "C:\\Users";
             var manager = new ConsoleManager(args, logger);
             var fileManager = new FileManager();
             var finder = new Finder();
