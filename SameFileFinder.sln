@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SameFileFinder", "SameFileF
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleSameFileFinder", "ConsoleSameFileFinder\ConsoleSameFileFinder.csproj", "{9A453FDC-4FD9-4040-BE1B-7B7B2BB1A62C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WpfSameFileFinder", "WpfSameFileFinder\WpfSameFileFinder.csproj", "{C1258C08-F66A-4D45-BF74-FD28A5BD93F9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +21,10 @@ Global
 		{9A453FDC-4FD9-4040-BE1B-7B7B2BB1A62C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9A453FDC-4FD9-4040-BE1B-7B7B2BB1A62C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9A453FDC-4FD9-4040-BE1B-7B7B2BB1A62C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C1258C08-F66A-4D45-BF74-FD28A5BD93F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1258C08-F66A-4D45-BF74-FD28A5BD93F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1258C08-F66A-4D45-BF74-FD28A5BD93F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1258C08-F66A-4D45-BF74-FD28A5BD93F9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

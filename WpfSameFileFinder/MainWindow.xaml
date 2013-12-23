@@ -1,0 +1,42 @@
+﻿<Window x:Class="WpfSameFileFinder.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:l="clr-namespace:WpfSameFileFinder" xmlns:sameFileFinder="clr-namespace:SameFileFinder;assembly=SameFileFinder"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="350" Width="525">
+    
+    <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Background="DimGray">
+        <DataGrid Name ="files" HorizontalAlignment="Left" Margin="5,72,0,0" VerticalAlignment="Top" Height="237" Width="497" Background="DarkGray" BorderBrush="White" SelectionMode="Extended" 
+          CanUserAddRows="False">
+            <DataGrid.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Open Contain Folder" Click="EnterTheFolderMenuItem_Click" />
+                    <MenuItem Header="Delete" Click="DeleteTheElement_Click" />
+                </ContextMenu>
+            </DataGrid.ContextMenu>
+
+        </DataGrid>
+        <Grid x:Name="wpfProgressBarAndText" Height="25" Width="275" Visibility="Collapsed" >
+            <ProgressBar x:Name="wpfProgressBar" IsIndeterminate="true" Minimum="0" Maximum="100" Width="250" Height="25" />
+            <Viewbox>
+                <TextBlock Text='Processing, Please Wait....' />
+            </Viewbox>
+        </Grid>
+        <StackPanel x:Name="lastStackPanel" Orientation="Horizontal" Grid.Row="0" Margin="-1,0,15,252">
+            <TextBox x:Name="folderPath" Height="23" Width="286" Margin="10,12,0,12" IsEnabled="False" Background="White"/>
+            <Button Content="..." Height="23"  x:Name="selectPath" Click="selectPath_Click" Margin="3"/>
+            <Button Content="Start" Height="23" x:Name="Calculate"  Width="96" Click="StartButton_Click" Margin="0,12" />
+            <ComboBox IsEditable="True" Width="87" x:Name="fileExtension" Text="*" Margin="0,21" RenderTransformOrigin="0.494,0.457">
+                <ComboBoxItem x:Name="MP1" Content="MP3"/>
+                <ComboBoxItem x:Name="Docx1" Content="Docx"/>
+                <ComboBoxItem x:Name="Xlsx1" Content="Xlsx"/>
+            </ComboBox>
+
+
+        </StackPanel>
+
+    </Grid>
+</Window>
+    
