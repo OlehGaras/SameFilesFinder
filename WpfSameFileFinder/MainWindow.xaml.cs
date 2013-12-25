@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-
 using System.Windows;
-using System.Windows.Data;
 using System.Windows.Forms;
 using SameFileFinder;
 
@@ -25,13 +22,13 @@ namespace WpfSameFileFinder
         {
             InitializeComponent();
 
-            this.DataContext = this;
+            DataContext = this;
 
-            this.backgroundWorker.DoWork += BackgroundWorker_DoWork;
-            this.backgroundWorker.RunWorkerCompleted += BackgroundWorker_RunWorkerCompleted;
+            backgroundWorker.DoWork += BackgroundWorker_DoWork;
+            backgroundWorker.RunWorkerCompleted += BackgroundWorker_RunWorkerCompleted;
 
-            this.backgroundWorker.WorkerSupportsCancellation = true;
-            this.backgroundWorker.WorkerReportsProgress = true;
+            backgroundWorker.WorkerSupportsCancellation = true;
+            backgroundWorker.WorkerReportsProgress = true;
             lastStackPanel.RegisterName("wpfProgressBar", wpfProgressBar);
         }
        
@@ -53,7 +50,7 @@ namespace WpfSameFileFinder
             }
             finally
             {
-                this.Calculate.Content = "Start";
+                Calculate.Content = "Start";
                 fileExtension.Visibility = Visibility.Visible;
             }
         }
@@ -64,17 +61,17 @@ namespace WpfSameFileFinder
             var manager = new FileManager();
             var logger = new Logger("log.txt");
             var finder = new Finder();
-            e.Result = finder.FindGroupOfSameFiles(this.CurrentPath, logger, manager);
+            e.Result = finder.FindGroupOfSameFiles(
+                CurrentPath, logger, manager);
             Groups = new List<MyFileInfo>();
             foreach (var gr in (List<FileGroup>)e.Result)
             {
                 Groups.AddRange(gr.Group);
                 Groups.Add(new MyFileInfo());
             }
-            if (this.backgroundWorker.CancellationPending)
+            if (backgroundWorker.CancellationPending)
             {
                 e.Cancel = true;
-                return;
             }
         }
 
@@ -101,8 +98,8 @@ namespace WpfSameFileFinder
             DialogResult result = folderDialog.ShowDialog();
             if (result == System.Windows.Forms.DialogResult.OK)
             {
-                this.CurrentPath = folderDialog.SelectedPath;
-                this.folderPath.Text = this.CurrentPath;
+                CurrentPath = folderDialog.SelectedPath;
+                folderPath.Text = CurrentPath;
             }
             else
             {
@@ -112,23 +109,22 @@ namespace WpfSameFileFinder
 
         private void StartButton_Click(object sender, RoutedEventArgs e)
         {
-            if (Directory.Exists(this.CurrentPath))
+            if (Directory.Exists(CurrentPath))
             {
 
-                if (this.Calculate.Content.Equals("Start"))
+                if (Calculate.Content.Equals("Start"))
                 {
-                    this.Calculate.Content = "Stop";
-                    this.files.AutoGenerateColumns = true;
-                    this.backgroundWorker.RunWorkerAsync();
-                    this.wpfProgressBarAndText.Visibility = Visibility.Visible;
-                    this.fileExtension.Visibility = Visibility.Collapsed;
+                    Calculate.Content = "Stop";
+                    files.AutoGenerateColumns = true;
+                    backgroundWorker.RunWorkerAsync();
+                    wpfProgressBarAndText.Visibility = Visibility.Visible;
+                    fileExtension.Visibility = Visibility.Collapsed;
 
                 }
                 else
                 {
                     // Cancel the asynchronous operation.                 
                     backgroundWorker.CancelAsync();
-
                     backgroundWorker = new BackgroundWorker();
                     backgroundWorker.DoWork += BackgroundWorker_DoWork;
                     backgroundWorker.RunWorkerCompleted += BackgroundWorker_RunWorkerCompleted;

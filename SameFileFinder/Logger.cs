@@ -15,29 +15,19 @@ namespace SameFileFinder
             string year = DateTime.Now.Year.ToString();
             string month = DateTime.Now.Month.ToString();
             string day = DateTime.Now.Day.ToString();
-            if (!Directory.Exists(year))
-            {
-                Directory.CreateDirectory(year);
-            }
-            if (!Directory.Exists(year + @"\" + month))
-            {
-                Directory.CreateDirectory(year + @"\" + month);
-            }
-            if (!Directory.Exists(year + @"\" + month + @"\" + day))
-            {
-                Directory.CreateDirectory(year + @"\" + month + @"\" + day);
-            }
             m_Path = year + @"\" + month + @"\" + day + @"\" + file_path;
-
+            if (!File.Exists(m_Path))
+            {
+                File.Create(m_Path);
+            }
         }
 
         public void Write(Exception e)
         {
             string message = "Exception:\n" + e.Message;
             if (e.InnerException != null)
-                message += Environment.NewLine + "InnerException:\n" + e.InnerException.ToString();
-            if (e.StackTrace != null)
-                message += Environment.NewLine + "StackTrace:\n" + e.StackTrace.ToString();
+                message += Exception(e.InnerException);
+            
             Write(message);
         }
 
@@ -46,12 +36,28 @@ namespace SameFileFinder
             lock (m_SynchObject)
             {
                 using (
-                    StreamWriter writer = new StreamWriter(new FileStream(m_Path, FileMode.Append)) {AutoFlush = true})
+                var writer = new StreamWriter(new FileStream(m_Path, FileMode.Append)) { AutoFlush = true })
                 {
                     writer.WriteLine(DateTime.Now.ToLongDateString() + DateTime.Now.ToLongTimeString());
                     writer.WriteLine(message);
                 }
             }
+        }
+
+        public string Exception(Exception e)
+        {
+            string message = string.Empty;
+            var ex = e as AggregateException;
+            if (ex != null)
+            {
+                foreach (var innerException in ex.InnerExceptions)
+                {
+                    message += Exception(innerException) + Environment.NewLine;
+                    message += Environment.NewLine + "StackTrace:" + Environment.NewLine + e.StackTrace + Environment.NewLine;
+                }
+                return message;
+            }
+            return string.Empty;
         }
 
         public void Write(string format, params string[] messages)

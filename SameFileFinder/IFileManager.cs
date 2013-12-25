@@ -10,5 +10,6 @@ namespace SameFileFinder
     public interface IFileManager
     {
         List<MyFileInfo> DirSearch(string dir,ILogger logger);
+        bool ByteCompare(MyFileInfo file1, MyFileInfo file2, ILogger logger);
     }
 }

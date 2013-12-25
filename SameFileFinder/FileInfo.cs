@@ -13,13 +13,13 @@ namespace SameFileFinder
         public long Length { get; set; }
         public string Name { get; set; }
         public FileInfo Information { get; set; }
-        public Int64 Hash { get; set; }
+        public string Hash { get; set; }
 
         public MyFileInfo()
         {
         }
 
-        public MyFileInfo(FileInfo inform, Int64 hash)
+        public MyFileInfo(FileInfo inform, string hash)
         {
             Information = inform;
             Path = Information.DirectoryName + @"\" + Information.Name;
