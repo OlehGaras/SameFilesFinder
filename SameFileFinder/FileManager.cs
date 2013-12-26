@@ -12,20 +12,20 @@ namespace SameFileFinder
     {
         private const int ChunkSize = 4096;
 
-        public List<MyFileInfo> DirSearch(string dir,ILogger logger)
+        public List<FileInfo> DirSearch(string dir, ILogger logger)
         {
-            var files = new List<MyFileInfo>();
+            var files = new List<FileInfo>();
             try
             {
                 var di = new DirectoryInfo(dir);
                 var filesInCurrentDirectory = di.GetFiles("*.*", SearchOption.TopDirectoryOnly).ToList();
                 var directoriesInCurrentDirectory =
                     di.GetDirectories("*.*", SearchOption.TopDirectoryOnly).ToList();
-                foreach (FileInfo f in filesInCurrentDirectory)
-                    files.Add(new MyFileInfo(f,null));
+                foreach (System.IO.FileInfo f in filesInCurrentDirectory)
+                    files.Add(new FileInfo(f, null));
                 foreach (DirectoryInfo d in directoriesInCurrentDirectory)
                 {
-                    files.AddRange(DirSearch(d.FullName,logger));
+                    files.AddRange(DirSearch(d.FullName, logger));
                 }
             }
             catch (Exception e)
@@ -35,18 +35,19 @@ namespace SameFileFinder
             return files;
         }
 
-        public  bool ByteCompare(MyFileInfo file1, MyFileInfo file2, ILogger logger)
+        //public bool ByteCompare(FileInfo file1, FileInfo file2, ILogger logger)
+        public bool ByteCompare(FileInfo file1, FileInfo file2, ILogger logger)
         {
             if (file1 == null || file2 == null)
                 return false;
             try
             {
-                FileStream firstFile = new FileStream(file1.Information.DirectoryName + @"\" + file1.Information.Name,
+                FileStream firstFile = new FileStream(file1.Path,
                                                       FileMode.Open, FileAccess.Read),
-                           secondFile = new FileStream(file2.Information.DirectoryName + @"\" + file2.Information.Name,
+                           secondFile = new FileStream(file2.Path,
                                                        FileMode.Open, FileAccess.Read);
-                byte[] byte1 = new byte[ChunkSize];
-                byte[] byte2 = new byte[ChunkSize];
+                byte[] byte1 = new byte[4096];
+                byte[] byte2 = new byte[4096];
 
                 int res1, res2;
                 do
@@ -72,6 +73,18 @@ namespace SameFileFinder
                 logger.Write(e);
             }
             return false;
+        }
+
+        public bool ByteByByteCompare(byte[] array1, byte[] array2)
+        {
+            for (int i = 0; i < array1.Length; i++)
+            {
+                if (array1[i] != array2[i])
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

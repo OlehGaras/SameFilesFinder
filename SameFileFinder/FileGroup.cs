@@ -9,26 +9,26 @@ namespace SameFileFinder
 {
     public class FileGroup : IFileGroup
     {
-        public List<MyFileInfo> Group { get; set; }
+        public List<FileInfo> Files { get; private set; }
 
         public FileGroup()
         {
-            Group = new List<MyFileInfo>();
+            Files = new List<FileInfo>();
         }
 
         public override string ToString()
         {
             var res = string.Empty;
-            foreach (var file in Group)
+            foreach (var file in Files)
             {
-                res += "\t" + file.Information.Name + "\n"; 
+                res += "\t" + file.Path + "\n"; 
             }
             return res;
         }
 
-        public void Add(MyFileInfo file)
+        public void Add(FileInfo file)
         {
-            Group.Add(file);
+            Files.Add(file);
         }
     }
 }

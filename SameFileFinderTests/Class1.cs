@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SameFileFinder
+namespace SameFileFinderTests
 {
-    public interface IFileGroup
+    public class Class1
     {
-        List<FileInfo> Files { get;  }
     }
 }

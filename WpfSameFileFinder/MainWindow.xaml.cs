@@ -6,6 +6,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Forms;
 using SameFileFinder;
+using FileInfo = SameFileFinder.FileInfo;
 
 namespace WpfSameFileFinder
 {
@@ -16,7 +17,7 @@ namespace WpfSameFileFinder
     {
         public string CurrentPath { get; set; }
         private BackgroundWorker backgroundWorker = new BackgroundWorker();
-        List<MyFileInfo> Groups = new List<MyFileInfo>();
+        List<FileInfo> Groups = new List<FileInfo>();
 
         public MainWindow()
         {
@@ -63,11 +64,11 @@ namespace WpfSameFileFinder
             var finder = new Finder();
             e.Result = finder.FindGroupOfSameFiles(
                 CurrentPath, logger, manager);
-            Groups = new List<MyFileInfo>();
+            Groups = new List<FileInfo>();
             foreach (var gr in (List<FileGroup>)e.Result)
             {
-                Groups.AddRange(gr.Group);
-                Groups.Add(new MyFileInfo());
+                Groups.AddRange(gr.Files);
+                Groups.Add(null);
             }
             if (backgroundWorker.CancellationPending)
             {
@@ -77,8 +78,8 @@ namespace WpfSameFileFinder
 
         private void EnterTheFolderMenuItem_Click(object sender, RoutedEventArgs e)
         {
-            var source = files.ItemsSource.Cast<MyFileInfo>().ToList();
-            var deleteFilePath = source.Where((s, i) => i == files.SelectedIndex).Select(s => s.Information.DirectoryName + @"\" + s.Information.FullName).First();
+            var source = files.ItemsSource.Cast<FileInfo>().ToList();
+            var deleteFilePath = source.Where((s, i) => i == files.SelectedIndex).Select(s => s.Path).First();
             var fileFolder = new ProcessStartInfo("explorer.exe", "/select,\"" + deleteFilePath + "\"");
             fileFolder.UseShellExecute = false;
             Process.Start(fileFolder);

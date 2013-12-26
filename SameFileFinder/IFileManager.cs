@@ -9,7 +9,7 @@ namespace SameFileFinder
 {
     public interface IFileManager
     {
-        List<MyFileInfo> DirSearch(string dir,ILogger logger);
-        bool ByteCompare(MyFileInfo file1, MyFileInfo file2, ILogger logger);
+        List<FileInfo> DirSearch(string dir,ILogger logger);
+        bool ByteCompare(FileInfo file1, FileInfo file2, ILogger logger);
     }
 }

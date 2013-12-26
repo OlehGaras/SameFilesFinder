@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using SameFileFinder;
 
 namespace ConsoleSameFileFinder
 {
     public class ConsoleManager
     {
-        public string[] Args { get; set; }
-        public Logger Logger { get; set; }
+        public string[] Args { get; private set; }
+        public ILogger Logger { get; private set; }
 
-        public ConsoleManager(string[] args,Logger logger)
+        public ConsoleManager(string[] args, ILogger logger)
         {
             Args = args;
             Logger = logger;
@@ -55,7 +52,7 @@ namespace ConsoleSameFileFinder
             int i = 0;
             foreach (var fileGroup in groups)
             {
-                if (fileGroup.Group.Count > 1)
+                if (fileGroup.Files.Count > 1)
                 {
                     Console.WriteLine("Group " + (i + 1).ToString() + ":");
                     Console.WriteLine(fileGroup.ToString());

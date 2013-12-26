@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Text;
 using System.Threading;
 
 
@@ -10,12 +11,16 @@ namespace SameFileFinder
         private string m_Path;
         private static readonly object m_SynchObject = new object();
 
-        public Logger(string file_path)
+        public Logger(string filePath)
         {
             string year = DateTime.Now.Year.ToString();
             string month = DateTime.Now.Month.ToString();
             string day = DateTime.Now.Day.ToString();
-            m_Path = year + @"\" + month + @"\" + day + @"\" + file_path;
+            if (!Directory.Exists(year + @"\" + month + @"\" + day))
+            {
+                Directory.CreateDirectory(year + @"\" + month + @"\" + day);
+            }
+            m_Path = year + @"\" + month + @"\" + day + @"\" + filePath;
             if (!File.Exists(m_Path))
             {
                 File.Create(m_Path);
@@ -24,10 +29,7 @@ namespace SameFileFinder
 
         public void Write(Exception e)
         {
-            string message = "Exception:\n" + e.Message;
-            if (e.InnerException != null)
-                message += Exception(e.InnerException);
-            
+            string message = Exception(e);
             Write(message);
         }
 
@@ -46,18 +48,23 @@ namespace SameFileFinder
 
         public string Exception(Exception e)
         {
-            string message = string.Empty;
+            if (e == null)
+                return string.Empty;
+            var message = new StringBuilder();
+            message.Append(e.Message + Environment.NewLine);
+            if (e.StackTrace != null)
+                message.Append("StackTrace:" + Environment.NewLine + e.StackTrace + Environment.NewLine);
+
             var ex = e as AggregateException;
             if (ex != null)
             {
                 foreach (var innerException in ex.InnerExceptions)
                 {
-                    message += Exception(innerException) + Environment.NewLine;
-                    message += Environment.NewLine + "StackTrace:" + Environment.NewLine + e.StackTrace + Environment.NewLine;
+                    message.Append( Exception(innerException));
                 }
-                return message;
             }
-            return string.Empty;
+            message.Append(Exception(e.InnerException));
+            return message.ToString(); 
         }
 
         public void Write(string format, params string[] messages)

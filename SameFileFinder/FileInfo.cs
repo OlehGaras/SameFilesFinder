@@ -1,31 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
-
-namespace SameFileFinder
+﻿namespace SameFileFinder
 {
-    public class MyFileInfo
+    public class FileInfo
     {
-        public string Path { get; set; }
-        public long Length { get; set; }
-        public string Name { get; set; }
-        public FileInfo Information { get; set; }
+        public string Path { get; private set; }
+        public long Length { get; private set; }
+        public string Name { get; private set; }
         public string Hash { get; set; }
 
-        public MyFileInfo()
+        public FileInfo(System.IO.FileInfo inform, string hash)
         {
-        }
-
-        public MyFileInfo(FileInfo inform, string hash)
-        {
-            Information = inform;
-            Path = Information.DirectoryName + @"\" + Information.Name;
-            Length = Information.Length;
-            Name = Information.Name;
-            Hash = hash;
+            Path = inform.DirectoryName + @"\" + inform.Name;
+            Length = inform.Length;
+            Name = inform.Name;
+            Hash = hash;        
         }   
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
@@ -14,12 +15,9 @@ namespace SameFileFinder
             HashAlgorithm ha = HashAlgorithm.Create();
             try
             {
-                var aggregateException = new AggregateException(new FileNotFoundException(), new FormatException(), new EventLogReadingException());
-
-                throw aggregateException;
                 var f1 = new FileStream(path, FileMode.Open);
                 byte[] hash1 = ha.ComputeHash(f1);
-                f1.Close();          
+                f1.Close();
                 return BitConverter.ToString(hash1);
             }
             catch (Exception e)
@@ -34,22 +32,25 @@ namespace SameFileFinder
             var files = fileManager.DirSearch(path, logger);
             if (files.Count == 0)
                 return null;
-            files.Sort((file1, file2) => file1.Information.Length.CompareTo(file2.Information.Length));
+            files.Sort((file1, file2) => file1.Length.CompareTo(file2.Length));
 
-            var groupsWithSameLength = FormTheGroup(files, f => f.Information.Length);
+            var groupsWithSameLength = FormTheGroup(files, f => f.Length);
             var checkedGroups = new List<FileGroup>();
-
-            var query = groupsWithSameLength.AsParallel().Select(group => CheckTheGroup(group, logger, fileManager));
+            var stopWatch = new Stopwatch();
+            stopWatch.Start();
+            var query = groupsWithSameLength.Select(group => CheckTheGroup(group, logger, fileManager));
             foreach (var group in query)
             {
                 if (group != null)
                     checkedGroups.AddRange(group);
             }
+            stopWatch.Stop();
 
+            Console.WriteLine(string.Format("Runtime:  {0}", TimeSpan.FromMilliseconds(stopWatch.ElapsedMilliseconds)));
             return checkedGroups;
         }
 
-        public List<FileGroup> FormTheGroup<T>(List<MyFileInfo> files, Func<MyFileInfo, T> selector)
+        public List<FileGroup> FormTheGroup<T>(List<FileInfo> files, Func<FileInfo, T> selector)
             where T : IComparable<T>
         {
             var groups = new List<FileGroup>();
@@ -60,38 +61,39 @@ namespace SameFileFinder
             {
                 if (selector(files[i]).CompareTo(currentValue) != 0)
                 {
-                    if (gr.Group.Count > 1)
+                    if (gr.Files.Count > 1)
                         groups.Add(gr);
                     gr = new FileGroup();
                     currentValue = selector(files[i]);
                 }
                 gr.Add(files[i]);
             }
-            if (gr.Group.Count > 1)
+            if (gr.Files.Count > 1)
                 groups.Add(gr);
             return groups;
         }
 
-        public List<FileGroup> CheckTheGroup(IFileGroup group, ILogger logger,IFileManager manager)
+        public List<FileGroup> CheckTheGroup(IFileGroup group, ILogger logger, IFileManager manager)
         {
             var resultList = new List<FileGroup>();
-            var files = group.Group;
+            var files = group.Files;
 
-            if (group.Group.Count == 1)
+            if (group.Files.Count == 1)
             {
                 return null;
             }
 
             for (int i = 0; i < files.Count; i++)
             {
-                files[i].Hash = HashTheFile(files[i].Information.DirectoryName + @"\" + files[i].Information.Name, logger);
+                files[i].Hash = HashTheFile(files[i].Path, logger);
             }
 
-            files.Sort((file1, file2) => file1.Hash.CompareTo(file2.Hash));
+            files.Sort((file1, file2) => String.Compare(file1.Hash, file2.Hash, StringComparison.Ordinal));
 
             var groupsWithSameHash = FormTheGroup(files, file => file.Hash);
 
-            var query = groupsWithSameHash.AsParallel().Select(gr => CompareFiles(gr, logger,manager));
+
+            var query = groupsWithSameHash.Select(gr => CompareFiles(gr, logger, manager));
             foreach (var gr in query)
             {
                 resultList.AddRange(gr);
@@ -100,43 +102,38 @@ namespace SameFileFinder
             return resultList;
         }
 
-        public List<FileGroup> CompareFiles(IFileGroup group, ILogger logger,IFileManager manager)
+        public List<FileGroup> CompareFiles(IFileGroup group, ILogger logger, IFileManager manager)
         {
-            if (group.Group.Count == 1)
+            if (group.Files.Count < 2)
             {
                 return null;
             }
-
-            var files = group.Group;
-            MyFileInfo currentValue = null;
             var resultList = new List<FileGroup>();
-            var result = new FileGroup();
-            for (int i = 0; i < files.Count; i++)
+            var set = new HashSet<FileInfo>(group.Files);
+            while (set.Count != 0)
             {
-                if (!manager.ByteCompare(files[i], currentValue, logger))
+                var enumerator = set.GetEnumerator();
+                var result = new FileGroup();
+
+                enumerator.MoveNext();
+                var curr = enumerator.Current;
+                result.Add(curr);
+
+                while (enumerator.MoveNext())
                 {
-                    currentValue = files[i];
-                    if (result.Group.Count > 1)
-                        resultList.Add(result);
-                    result = new FileGroup();
-                }
-                else
-                {
-                    continue;
-                }
-                result.Add(files[i]);
-                for (int j = i + 1; j < group.Group.Count; j++)
-                {
-                    if (manager.ByteCompare(files[i], files[j], logger))
+                    if (manager.ByteCompare(curr, enumerator.Current, logger))
                     {
-                        result.Add(files[j]);
+                        result.Add(enumerator.Current);
                     }
                 }
+
+                set.RemoveWhere(file => result.Files.Contains(file));
+                enumerator.Dispose();
+                if (result.Files.Count > 1)
+                    resultList.Add(result);
             }
-            if (result.Group.Count > 1)
-                resultList.Add(result);
             return resultList;
         }
-        
+
     }
 }
