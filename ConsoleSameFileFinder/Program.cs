@@ -11,8 +11,8 @@ namespace ConsoleSameFileFinder
             var manager = new ConsoleManager(args, logger);
             var fileManager = new FileManager();
             var finder = new Finder();
-            manager.Execute(fileManager,finder,logger);        
-      }
+            manager.Execute(fileManager, finder, logger);
+        }
     }
 
     public class FakeLogger : ILogger

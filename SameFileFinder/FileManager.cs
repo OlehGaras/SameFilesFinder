@@ -2,9 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SameFileFinder
 {
@@ -19,10 +16,11 @@ namespace SameFileFinder
             {
                 var di = new DirectoryInfo(dir);
                 var filesInCurrentDirectory = di.GetFiles("*.*", SearchOption.TopDirectoryOnly).ToList();
-                var directoriesInCurrentDirectory =
-                    di.GetDirectories("*.*", SearchOption.TopDirectoryOnly).ToList();
+                var directoriesInCurrentDirectory = di.GetDirectories("*.*", SearchOption.TopDirectoryOnly).ToList();
                 foreach (System.IO.FileInfo f in filesInCurrentDirectory)
-                    files.Add(new FileInfo(f, null));
+                {
+                    files.Add(new FileInfo(f.DirectoryName + @"\" + f.Name, f.Length, f.Name, null));
+                }
                 foreach (DirectoryInfo d in directoriesInCurrentDirectory)
                 {
                     files.AddRange(DirSearch(d.FullName, logger));
@@ -35,37 +33,34 @@ namespace SameFileFinder
             return files;
         }
 
-        //public bool ByteCompare(FileInfo file1, FileInfo file2, ILogger logger)
         public bool ByteCompare(FileInfo file1, FileInfo file2, ILogger logger)
         {
             if (file1 == null || file2 == null)
                 return false;
             try
             {
-                FileStream firstFile = new FileStream(file1.Path,
-                                                      FileMode.Open, FileAccess.Read),
-                           secondFile = new FileStream(file2.Path,
-                                                       FileMode.Open, FileAccess.Read);
-                byte[] byte1 = new byte[4096];
-                byte[] byte2 = new byte[4096];
+                var firstFile = new FileStream(file1.Path, FileMode.Open, FileAccess.Read);
+                var secondFile = new FileStream(file2.Path, FileMode.Open, FileAccess.Read);
 
-                int res1, res2;
-                do
+                var byte1 = new byte[ChunkSize];
+                var byte2 = new byte[ChunkSize];
+
+                var res1 = firstFile.Read(byte1, 0, byte1.Length);
+                var res2 = secondFile.Read(byte2, 0, byte2.Length);
+                while (res1 != 0 && res2 != 0)
                 {
+                    if (!ByteByByteCompare(byte1, byte2))
+                    {
+                        firstFile.Close();
+                        secondFile.Close();
+                        return false;
+                    }
                     res1 = firstFile.Read(byte1, 0, byte1.Length);
                     res2 = secondFile.Read(byte2, 0, byte2.Length);
-
-                    for (int i = 0; i < byte1.Length; i++)
-                    {
-                        if (byte1[i] != byte2[i])
-                        {
-                            return false;
-                        }
-
-                    }
                 }
-                while (res1 != 0 && res2 != 0);
 
+                firstFile.Close();
+                secondFile.Close();
                 return true;
             }
             catch (Exception e)
@@ -75,11 +70,17 @@ namespace SameFileFinder
             return false;
         }
 
-        public bool ByteByByteCompare(byte[] array1, byte[] array2)
+        public bool ByteByByteCompare(byte[] first, byte[] second)
         {
-            for (int i = 0; i < array1.Length; i++)
+            if (first == null || second == null) 
+                throw new ArgumentNullException();
+
+            if (first.Length != second.Length)
+                return false;
+
+            for (int i = 0; i < first.Length; i++)
             {
-                if (array1[i] != array2[i])
+                if (first[i] != second[i])
                 {
                     return false;
                 }
