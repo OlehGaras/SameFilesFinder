@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
 
 namespace SameFileFinder
 {
+    [Export(typeof(IFileManager))]
     public class FileManager : IFileManager
     {
         private const int ChunkSize = 4096;

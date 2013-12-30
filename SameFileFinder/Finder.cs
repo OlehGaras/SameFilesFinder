@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 
+
 namespace SameFileFinder
 {
+    [Export (typeof(IFinder))]
     public class Finder : IFinder
     {
         public string HashTheFile(string path, ILogger logger)

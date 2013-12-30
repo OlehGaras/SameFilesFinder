@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -14,9 +15,9 @@ namespace SameFileFinder
             if (pathToFolder == null || fileName == null) throw new ArgumentNullException();
 
             pathToFolder = FixPathToFolder(pathToFolder);
-            string year = DateTime.Now.Year.ToString();
-            string month = DateTime.Now.Month.ToString();
-            string day = DateTime.Now.Day.ToString();
+            string year = DateTime.Now.Year.ToString(CultureInfo.InvariantCulture);
+            string month = DateTime.Now.Month.ToString(CultureInfo.InvariantCulture);
+            string day = DateTime.Now.Day.ToString(CultureInfo.InvariantCulture);
             try
             {
                 if (!Directory.Exists(pathToFolder + year + @"\" + month + @"\" + day))
