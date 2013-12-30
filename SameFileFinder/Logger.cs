@@ -1,36 +1,63 @@
 ﻿using System;
 using System.IO;
 using System.Text;
-using System.Threading;
-
 
 namespace SameFileFinder
 {
     public class Logger : ILogger
     {
-        private string m_Path;
+        public string Path { get; private set; }
         private static readonly object m_SynchObject = new object();
 
-        public Logger(string filePath)
+        public Logger(string pathToFolder, string fileName)
         {
+            if (pathToFolder == null || fileName == null) throw new ArgumentNullException();
+
+            pathToFolder = FixPathToFolder(pathToFolder);
             string year = DateTime.Now.Year.ToString();
             string month = DateTime.Now.Month.ToString();
             string day = DateTime.Now.Day.ToString();
-            if (!Directory.Exists(year + @"\" + month + @"\" + day))
+            try
             {
-                Directory.CreateDirectory(year + @"\" + month + @"\" + day);
+                if (!Directory.Exists(pathToFolder + year + @"\" + month + @"\" + day))
+                {
+                    Directory.CreateDirectory(pathToFolder + year + @"\" + month + @"\" + day);
+                }
+                Path = pathToFolder + year + @"\" + month + @"\" + day + @"\" + fileName;
+
+                if (!File.Exists(Path))
+                {
+                    File.Create(Path);
+                }
             }
-            m_Path = year + @"\" + month + @"\" + day + @"\" + filePath;
-            if (!File.Exists(m_Path))
+            catch (Exception e)
             {
-                File.Create(m_Path);
+                Console.WriteLine(Exception(e));
+                Console.WriteLine("Log is written to the default file 'log.txt'! ");
+                Path = year + @"\" + month + @"\" + day + @"\log.txt";
             }
+        }
+
+        public string FixPathToFolder(string pathToFolder)
+        {
+            if (!pathToFolder.EndsWith(@"\") && pathToFolder != "")
+            {
+                pathToFolder += @"\";
+            }
+            return pathToFolder;
         }
 
         public void Write(Exception e)
         {
             string message = Exception(e);
-            Write(message);
+            try
+            {
+                Write(message);
+            }
+            catch (Exception exc)
+            {
+                Console.WriteLine(Exception(exc));
+            }
         }
 
         public void Write(string message)
@@ -38,11 +65,11 @@ namespace SameFileFinder
             lock (m_SynchObject)
             {
                 using (
-                var writer = new StreamWriter(new FileStream(m_Path, FileMode.Append)) { AutoFlush = true })
+                var writer = new StreamWriter(new FileStream(Path, FileMode.Append)) { AutoFlush = true })
                 {
                     writer.WriteLine(DateTime.Now.ToLongDateString() + DateTime.Now.ToLongTimeString());
                     writer.WriteLine(message);
-                }
+                }               
             }
         }
 
@@ -60,11 +87,11 @@ namespace SameFileFinder
             {
                 foreach (var innerException in ex.InnerExceptions)
                 {
-                    message.Append( Exception(innerException));
+                    message.Append(Exception(innerException));
                 }
             }
             message.Append(Exception(e.InnerException));
-            return message.ToString(); 
+            return message.ToString();
         }
 
         public void Write(string format, params string[] messages)

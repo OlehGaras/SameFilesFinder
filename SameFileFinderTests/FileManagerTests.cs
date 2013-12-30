@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using FakeItEasy;
 using NUnit.Framework;
 using SameFileFinder;
@@ -33,6 +32,7 @@ namespace SameFileFinderTests
 
         [Test]
         [TestCase(new byte[] { 1 }, new byte[] { 2 })]
+        [TestCase(new byte[] { 2 }, new byte[] { 1 })]
         [TestCase(new byte[] { 1 }, new byte[] { })]
         public void ByteByByteCompare_DiferentArrays_ReturnsFalse_Test(byte[] first, byte[] second)
         {
@@ -92,8 +92,8 @@ namespace SameFileFinderTests
         }
 
         [Test]
-        [TestCase("")]
-        [TestCase("Directory")]
+        [TestCase(@"\/")]
+        [TestCase("<>")]
         public void DirSearch_WrongDirectoryPath_WritesToLog_Test(string directoryPath)
         {
             var manager = new FileManager();
@@ -114,6 +114,5 @@ namespace SameFileFinderTests
 
             Assert.IsTrue(files.Count != 0);
         }
-
     }
 }

@@ -6,7 +6,7 @@ namespace SameFileFinderTests
 {
     public static class TestsHelper
     {
-        public static string TestsFolderPath = string.Format(@"{0}\Tests", Path.GetTempPath());
+        public static string TestsFolderPath = string.Format(@"{0}Tests", Path.GetTempPath());
 
         private static void EnsureTestDirectoryExists()
         {
@@ -27,19 +27,24 @@ namespace SameFileFinderTests
                 File.WriteAllText(filePath, content);
             }
 
-            Console.WriteLine(string.Format(@"Creating file: {0}\{1}",TestsFolderPath, fileName));
+            Console.WriteLine(string.Format(@"Creating file: {0}\{1}", TestsFolderPath, fileName));
 
             return filePath;
         }
 
         public static string CreateTestFile(string fileName, byte[] content)
         {
-            var strContent = new StringBuilder();
+            EnsureTestDirectoryExists();
+            var filePath = TestsFolderPath + @"\" + fileName;
+            if (File.Exists(filePath))
+                throw new IOException(string.Format("file : {0} already exists", filePath));
+
+            var fileStream = new FileStream(filePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
             foreach (var b in content)
-            {
-                strContent.Append(b);
-            }
-            return CreateTestFile(fileName, strContent.ToString());          
+                fileStream.WriteByte(b);
+            fileStream.Dispose();
+
+            return filePath;
         }
 
         public static void CleanUpTestDirectory(string path)

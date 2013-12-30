@@ -6,5 +6,6 @@ namespace SameFileFinder
     {
         void Write(Exception e);
         void Write(string message);
+        string Exception(Exception e);
     }
 }

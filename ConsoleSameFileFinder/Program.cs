@@ -5,9 +5,10 @@ namespace ConsoleSameFileFinder
 {
     class Program
     {
+
         static void Main(string[] args)
         {
-            var logger = new Logger("log.txt");
+            var logger = new Logger(@"",@"log.txt");
             var manager = new ConsoleManager(args, logger);
             var fileManager = new FileManager();
             var finder = new Finder();
@@ -23,6 +24,11 @@ namespace ConsoleSameFileFinder
 
         public void Write(string message)
         {
+        }
+
+        public string Exception(Exception e)
+        {
+            return null;
         }
     }
 }

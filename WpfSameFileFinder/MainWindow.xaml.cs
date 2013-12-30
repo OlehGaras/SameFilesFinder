@@ -60,7 +60,7 @@ namespace WpfSameFileFinder
         {
             
             var manager = new FileManager();
-            var logger = new Logger("log.txt");
+            var logger = new Logger("","log.txt");
             var finder = new Finder();
             e.Result = finder.FindGroupOfSameFiles(
                 CurrentPath, logger, manager);

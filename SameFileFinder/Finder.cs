@@ -11,7 +11,7 @@ namespace SameFileFinder
     {
         public string HashTheFile(string path, ILogger logger)
         {
-            HashAlgorithm ha = HashAlgorithm.Create();
+            var ha = HashAlgorithm.Create();
             try
             {
                 var f1 = new FileStream(path, FileMode.Open);

@@ -28,7 +28,6 @@ namespace SameFileFinderTests
             var res = finder.CompareFiles(group, logger, manager);
 
             Assert.IsTrue(res.Count == 1);
-
         }
 
         [Test]
@@ -36,7 +35,7 @@ namespace SameFileFinderTests
         {
             var finder = new Finder();
             var logger = A.Fake<ILogger>();
-            string hash = finder.HashTheFile(@"Incorrect\Path.txt", logger);
+            string hash = finder.HashTheFile(@"???\Path.txt", logger);
 
             Assert.IsTrue(hash == string.Empty);
         }
@@ -58,7 +57,7 @@ namespace SameFileFinderTests
             var finder = new Finder();
             var logger = A.Fake<ILogger>();
 
-            finder.HashTheFile(@"Incorrect\Path.txt", logger);
+            finder.HashTheFile(@"<>\Path.txt", logger);
 
             A.CallTo(() => logger.Write(A<Exception>.Ignored)).MustHaveHappened();
         }
@@ -126,7 +125,7 @@ namespace SameFileFinderTests
             var manager = A.Fake<IFileManager>();
             var logger = A.Fake<ILogger>();
 
-            var res = finder.FindGroupOfSameFiles(@"Incorrect\Path", logger, manager);
+            var res = finder.FindGroupOfSameFiles(@"<>\Path", logger, manager);
 
             Assert.IsTrue(res == null);
         }

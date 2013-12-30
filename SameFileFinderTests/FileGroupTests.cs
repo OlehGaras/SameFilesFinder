@@ -7,7 +7,7 @@ namespace SameFileFinderTests
     public class FileGroupTests: BaseTests
     {
         [Test]
-        public void Add_NewFile_IncrementsGroupCount()
+        public void Add_NewFile_IncrementsGroupCount_Test()
         {
             var group = new FileGroup();
             var file = new FileInfo("",0,"","");

@@ -17,11 +17,11 @@ namespace SameFileFinder
                 var di = new DirectoryInfo(dir);
                 var filesInCurrentDirectory = di.GetFiles("*.*", SearchOption.TopDirectoryOnly).ToList();
                 var directoriesInCurrentDirectory = di.GetDirectories("*.*", SearchOption.TopDirectoryOnly).ToList();
-                foreach (System.IO.FileInfo f in filesInCurrentDirectory)
+                foreach (var f in filesInCurrentDirectory)
                 {
                     files.Add(new FileInfo(f.DirectoryName + @"\" + f.Name, f.Length, f.Name, null));
                 }
-                foreach (DirectoryInfo d in directoriesInCurrentDirectory)
+                foreach (var d in directoriesInCurrentDirectory)
                 {
                     files.AddRange(DirSearch(d.FullName, logger));
                 }
