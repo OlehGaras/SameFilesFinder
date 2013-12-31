@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using SameFileFinder;
 
 namespace ConsoleSameFileFinder
@@ -7,6 +8,7 @@ namespace ConsoleSameFileFinder
     public class ConsoleManager
     {
         public string[] Args { get; private set; }
+
         public ILogger Logger { get; private set; }
 
         public ConsoleManager(string[] args, ILogger logger)
@@ -54,7 +56,7 @@ namespace ConsoleSameFileFinder
             {
                 if (fileGroup.Files.Count > 1)
                 {
-                    Console.WriteLine("Group " + (i + 1).ToString() + ":");
+                    Console.WriteLine("Group " + (i + 1).ToString(CultureInfo.InvariantCulture) + ":");
                     Console.WriteLine(fileGroup.ToString());
                     i++;
                 }

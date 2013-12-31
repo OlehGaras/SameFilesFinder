@@ -80,7 +80,7 @@ namespace SameFileFinder
             var resultList = new List<FileGroup>();
             var files = group.Files;
 
-            if (group.Files.Count == 1)
+            if (files.Count == 1)
             {
                 return null;
             }
@@ -93,7 +93,6 @@ namespace SameFileFinder
             files.Sort((file1, file2) => String.Compare(file1.Hash, file2.Hash, StringComparison.Ordinal));
 
             var groupsWithSameHash = FormTheGroup(files, file => file.Hash);
-
 
             var query = groupsWithSameHash.Select(gr => CompareFiles(gr, logger, manager));
             foreach (var gr in query)

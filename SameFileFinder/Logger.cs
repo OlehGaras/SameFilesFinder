@@ -28,7 +28,7 @@ namespace SameFileFinder
 
                 if (!File.Exists(Path))
                 {
-                    File.Create(Path);
+                    File.Create(Path).Close();
                 }
             }
             catch (Exception e)

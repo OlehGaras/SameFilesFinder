@@ -10,6 +10,17 @@ namespace SameFileFinderTests
     public class FinderTests : BaseTests
     {
         [Test]
+        public void CompareFiles_GroupWithOneFile_ReturnsNull_Test()
+        {
+            var finder = new Finder();
+
+            var group = new FileGroup();
+            group.Add(A.Fake<FileInfo>());
+
+            Assert.IsTrue(finder.CompareFiles(group,A<ILogger>.Ignored,A<IFileManager>.Ignored) == null);
+        }
+
+        [Test]
         public void CompareFiles_FakeSimilarFiles_ReturnsGroupWithThisFiles_Test()
         {
             var firstFile = A.Fake<FileInfo>();
@@ -63,9 +74,23 @@ namespace SameFileFinderTests
         }
 
         [Test]
-        public void CheckTheGroup_GroupWithSimilarFiles_ReturnsGroupsWithSimilarHashes_Test()
+        public void HashTheFile_SituationWithException_ReturnsStringEmpty()
         {
+            var finder = new Finder();
+            var logger = A.Fake<ILogger>();
 
+            Assert.IsTrue(finder.HashTheFile(@"<>\Path.txt", logger) == string.Empty);
+        }
+
+        [Test]
+        public void CheckTheGroup_GroupWithOneFile_ReturnsNull_Test()
+        {
+            var finder = new Finder();
+            var group = new FileGroup();
+
+            group.Add(A.Fake<FileInfo>());
+
+            Assert.IsTrue(finder.CheckTheGroup(group,A<ILogger>.Ignored,A<IFileManager>.Ignored) == null);
         }
 
         [Test]
