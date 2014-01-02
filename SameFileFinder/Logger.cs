@@ -1,14 +1,22 @@
 ﻿using System;
+using System.ComponentModel.Composition;
 using System.Globalization;
 using System.IO;
 using System.Text;
 
 namespace SameFileFinder
 {
+    [Export(typeof(ILogger))]
+
     public class Logger : ILogger
     {
         public string Path { get; private set; }
         private static readonly object m_SynchObject = new object();
+
+        [ImportingConstructor]
+        public Logger() : this(@"", "log.txt")
+        {
+        }
 
         public Logger(string pathToFolder, string fileName)
         {

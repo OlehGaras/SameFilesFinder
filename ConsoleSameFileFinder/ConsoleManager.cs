@@ -9,17 +9,14 @@ namespace ConsoleSameFileFinder
     {
         public string[] Args { get; private set; }
 
-        public ILogger Logger { get; private set; }
-
-        public ConsoleManager(string[] args, ILogger logger)
+        public ConsoleManager(string[] args)
         {
             Args = args;
-            Logger = logger;
-            Logger.Write("APPLICATION STARTED");  
         }
 
         public void Execute(IFileManager fileManager, IFinder finder,ILogger logger)
-        {  
+        {
+            logger.Write("APPLICATION STARTED");  
             if (Args.Length == 2)
             {
                 switch (Args[0])
@@ -32,7 +29,7 @@ namespace ConsoleSameFileFinder
                 }
 
                 string path = Args[1];
-                var groups = finder.FindGroupOfSameFiles(path, Logger, fileManager);
+                var groups = finder.FindGroupOfSameFiles(path, logger, fileManager);
                 
                 if (groups.Count == 0)
                 {
@@ -46,7 +43,7 @@ namespace ConsoleSameFileFinder
             {
                 Console.WriteLine("This command is not recognized as an internal or external command, operable program or batch file.");
             }
-            Logger.Write("APPLICATION ENDED");
+            logger.Write("APPLICATION ENDED");
         }
 
         public void PrintGroups(List<FileGroup> groups)

@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.Composition;
-using System.ComponentModel.Composition.Hosting;
-using SameFileFinder;
+﻿using SameFileFinder;
 
 
 namespace ConsoleSameFileFinder
@@ -9,12 +7,13 @@ namespace ConsoleSameFileFinder
     {
         static void Main(string[] args)
         {
-            var logger = new Logger(@"", "log.txt");
-            var catalog = new AssemblyCatalog(typeof(Finder).Assembly);
-            var container = new CompositionContainer(catalog);
-            container.ComposeExportedValue<ILogger>(logger);
-            var manager = new ConsoleManager(args, container.GetExportedValue<ILogger>());
-            manager.Execute(container.GetExportedValue<IFileManager>(), container.GetExportedValue<IFinder>(), container.GetExportedValue<ILogger>());
+            //var serviceLocator = new MefServiceLocator();
+            //var manager = new ConsoleManager(args);
+            //manager.Execute(serviceLocator.GetInstance<IFileManager>(), serviceLocator.GetInstance<IFinder>(), serviceLocator.GetInstance<ILogger>());
+
+            var serviceLocator = new AutofacServiceLocator();
+            var manager = new ConsoleManager(args);
+            manager.Execute(serviceLocator.GetInstance<IFileManager>(), serviceLocator.GetInstance<IFinder>(), serviceLocator.GetInstance<ILogger>());
         }
     }
 }
