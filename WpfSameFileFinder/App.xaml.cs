@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using System.Windows;
+using SameFileFinder;
 
 namespace WpfSameFileFinder
 {
@@ -13,5 +9,11 @@ namespace WpfSameFileFinder
     /// </summary>
     public partial class App : Application
     {
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
+            var window = new MainWindow(new MainWindowViewModel());
+            window.Show();
+        }
     }
 }

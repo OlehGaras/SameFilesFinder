@@ -4,7 +4,7 @@ namespace SameFileFinder
 {
     public class FileGroup : IFileGroup
     {
-        public List<FileInfo> Files { get; private set; }
+        public  List<FileInfo> Files { get; private set; }
 
         public FileGroup()
         {

@@ -3,40 +3,43 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:l="clr-namespace:WpfSameFileFinder" xmlns:sameFileFinder="clr-namespace:SameFileFinder;assembly=SameFileFinder"
+        xmlns:sameFileFinder="clr-namespace:SameFileFinder;assembly=SameFileFinder"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
-    
-    <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Background="DimGray">
-        <DataGrid Name ="files" HorizontalAlignment="Left" Margin="5,72,0,0" VerticalAlignment="Top" Height="237" Width="497" Background="DarkGray" BorderBrush="White" SelectionMode="Extended" 
-          CanUserAddRows="False">
-            <DataGrid.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="Open Contain Folder" Click="EnterTheFolderMenuItem_Click" />
-                    <MenuItem Header="Delete" Click="DeleteTheElement_Click" />
-                </ContextMenu>
-            </DataGrid.ContextMenu>
+    <Grid Background="DimGray" ShowGridLines="True">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto">
+            </RowDefinition>
+            <RowDefinition Height="*">
+            </RowDefinition>
+        </Grid.RowDefinitions>
+        <StackPanel x:Name="LastStackPanel" Orientation="Horizontal" Grid.Row="0" Margin="2" VerticalAlignment="Top" HorizontalAlignment="Center">
+            <TextBox x:Name="FolderPath" Text = "{Binding CurrentPath}" Margin="5"  Padding="2" IsEnabled="False" Background="White" MinWidth="300">
+            </TextBox>
+            <Button Content="..."   x:Name="SelectPath"  Margin="3" Padding="3" Command="{Binding SetThePath}"/>
+            <Button Content="Start"  x:Name="Calculate"  Padding="3" Margin ="3" Command="{Binding GetGroups}" />
+        </StackPanel>
 
-        </DataGrid>
-        <Grid x:Name="wpfProgressBarAndText" Height="25" Width="275" Visibility="Collapsed" >
-            <ProgressBar x:Name="wpfProgressBar" IsIndeterminate="true" Minimum="0" Maximum="100" Width="250" Height="25" />
+        <Grid x:Name="WpfProgressBarAndText"  Visibility="Collapsed"  VerticalAlignment="Center" HorizontalAlignment="Center">
+            <ProgressBar x:Name="WpfProgressBar" IsIndeterminate="true" Minimum="0" Maximum="100" />
             <Viewbox>
                 <TextBlock Text='Processing, Please Wait....' />
             </Viewbox>
         </Grid>
-        <StackPanel x:Name="lastStackPanel" Orientation="Horizontal" Grid.Row="0" Margin="-1,0,15,252">
-            <TextBox x:Name="folderPath" Height="23" Width="286" Margin="10,12,0,12" IsEnabled="False" Background="White"/>
-            <Button Content="..." Height="23"  x:Name="selectPath" Click="selectPath_Click" Margin="3"/>
-            <Button Content="Start" Height="23" x:Name="Calculate"  Width="96" Click="StartButton_Click" Margin="0,12" />
-            <ComboBox IsEditable="True" Width="87" x:Name="fileExtension" Text="*" Margin="0,21" RenderTransformOrigin="0.494,0.457">
-                <ComboBoxItem x:Name="MP1" Content="MP3"/>
-                <ComboBoxItem x:Name="Docx1" Content="Docx"/>
-                <ComboBoxItem x:Name="Xlsx1" Content="Xlsx"/>
-            </ComboBox>
 
-
-        </StackPanel>
-
+        <ListView ItemsSource ="{Binding Groups}" Name="GroupList"  Margin="5" Height="Auto" VerticalAlignment="Top" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" Background="DarkGray" BorderBrush="White" SelectionMode="Single" HorizontalAlignment="Stretch" Grid.Row="1">
+            <ListView.ItemTemplate>
+                <DataTemplate DataType="{x:Type sameFileFinder:FileGroup}">
+                    <DataGrid ItemsSource="{Binding Files}" AutoGenerateColumns="True" ColumnWidth="*" Width="{Binding ElementName=GroupList, Path=ActualWidth}" SelectedItem="{Binding DataContext.SelectedItem, ElementName=GroupList, UpdateSourceTrigger=PropertyChanged}">
+                    </DataGrid>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+            <ListView.ContextMenu>
+                <ContextMenu>
+                    <MenuItem Header="Open Contain Folder"  Command="{Binding EnterTheFolder}"/>
+                </ContextMenu>
+            </ListView.ContextMenu>
+        </ListView>
     </Grid>
 </Window>
     

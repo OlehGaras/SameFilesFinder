@@ -1,11 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Windows;
-using System.Windows.Forms;
-using SameFileFinder;
 using FileInfo = SameFileFinder.FileInfo;
 
 namespace WpfSameFileFinder
@@ -15,135 +10,127 @@ namespace WpfSameFileFinder
     /// </summary>
     public partial class MainWindow : Window
     {
-        public string CurrentPath { get; set; }
-        private BackgroundWorker backgroundWorker = new BackgroundWorker();
-        List<FileInfo> Groups = new List<FileInfo>();
-
-        public MainWindow()
+        public MainWindow(MainWindowViewModel viewModel)
         {
             InitializeComponent();
+            DataContext = viewModel;
 
-            DataContext = this;
+            //backgroundWorker.DoWork += BackgroundWorker_DoWork;
+            //backgroundWorker.RunWorkerCompleted += BackgroundWorker_RunWorkerCompleted;
 
-            backgroundWorker.DoWork += BackgroundWorker_DoWork;
-            backgroundWorker.RunWorkerCompleted += BackgroundWorker_RunWorkerCompleted;
-
-            backgroundWorker.WorkerSupportsCancellation = true;
-            backgroundWorker.WorkerReportsProgress = true;
-            lastStackPanel.RegisterName("wpfProgressBar", wpfProgressBar);
-        }
-       
-        private void BackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            try
-            {
-                // Back on primary thread, can access ui controls 
-                wpfProgressBarAndText.Visibility = Visibility.Collapsed;
-
-                if (e.Cancelled)
-                {
-                    files.ItemsSource = "There is no Data to display";
-                }
-                else
-                {
-                    files.ItemsSource = Groups;
-                }
-            }
-            finally
-            {
-                Calculate.Content = "Start";
-                fileExtension.Visibility = Visibility.Visible;
-            }
+            //backgroundWorker.WorkerSupportsCancellation = true;
+            //backgroundWorker.WorkerReportsProgress = true;
+            //lastStackPanel.RegisterName("wpfProgressBar", wpfProgressBar);
         }
 
-        private void BackgroundWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            
-            var manager = new FileManager();
-            var logger = new Logger("","log.txt");
-            var finder = new Finder();
-            e.Result = finder.FindGroupOfSameFiles(
-                CurrentPath, logger, manager);
-            Groups = new List<FileInfo>();
-            foreach (var gr in (List<FileGroup>)e.Result)
-            {
-                Groups.AddRange(gr.Files);
-                Groups.Add(null);
-            }
-            if (backgroundWorker.CancellationPending)
-            {
-                e.Cancel = true;
-            }
-        }
+        //private void BackgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        //{
+        //    try
+        //    {
+        //        // Back on primary thread, can access ui controls 
+        //        wpfProgressBarAndText.Visibility = Visibility.Collapsed;
 
-        private void EnterTheFolderMenuItem_Click(object sender, RoutedEventArgs e)
-        {
-            var source = files.ItemsSource.Cast<FileInfo>().ToList();
-            var deleteFilePath = source.Where((s, i) => i == files.SelectedIndex).Select(s => s.Path).First();
-            var fileFolder = new ProcessStartInfo("explorer.exe", "/select,\"" + deleteFilePath + "\"");
-            fileFolder.UseShellExecute = false;
-            Process.Start(fileFolder);
-        }
+        //        if (e.Cancelled)
+        //        {
+        //            files.ItemsSource = "There is no Data to display";
+        //        }
+        //        else
+        //        {
+        //            files.ItemsSource = Groups;
+        //        }
+        //    }
+        //    finally
+        //    {
+        //        Calculate.Content = "Start";
+        //    }
+        //}
 
-        private void DeleteTheElement_Click(object sender, RoutedEventArgs e)
-        {
+        //private void BackgroundWorker_DoWork(object sender, DoWorkEventArgs e)
+        //{
+        //    var manager = new FileManager();
+        //    var logger = new Logger("", "log.txt");
+        //    var finder = new Finder();
+        //    e.Result = finder.FindGroupOfSameFiles(
+        //        CurrentPath, logger, manager);
+        //    Groups = new List<FileInfo>();
 
-        }
+        //    foreach (var gr in (List<FileGroup>)e.Result)
+        //    {
+        //        Groups.AddRange(gr.Files);
+        //    }
+        //    if (backgroundWorker.CancellationPending)
+        //    {
+        //        e.Cancel = true;
+        //    }
+        //}
 
-        private void selectPath_Click(object sender, RoutedEventArgs e)
-        {
-            var folderDialog = new FolderBrowserDialog();
-            folderDialog.Description = @"Select folder to find similar files.";
+        //private void EnterTheFolderMenuItem_Click(object sender, RoutedEventArgs e)
+        //{
+        //    var source = files.ItemsSource.Cast<FileInfo>().ToList();
+        //    var deleteFilePath = source.Where((s, i) => i == files.SelectedIndex).Select(s => s.Path).First();
+        //    var fileFolder = new ProcessStartInfo("explorer.exe", "/select,\"" + deleteFilePath + "\"");
+        //    fileFolder.UseShellExecute = false;
+        //    Process.Start(fileFolder);
+        //}
 
-            folderDialog.ShowNewFolderButton = false;
-            DialogResult result = folderDialog.ShowDialog();
-            if (result == System.Windows.Forms.DialogResult.OK)
-            {
-                CurrentPath = folderDialog.SelectedPath;
-                folderPath.Text = CurrentPath;
-            }
-            else
-            {
-                System.Windows.Forms.MessageBox.Show(@"You have not selected or canceled Path selection popup");
-            }
-        }
+        //private void DeleteTheElement_Click(object sender, RoutedEventArgs e)
+        //{
 
-        private void StartButton_Click(object sender, RoutedEventArgs e)
-        {
-            if (Directory.Exists(CurrentPath))
-            {
+        //}
 
-                if (Calculate.Content.Equals("Start"))
-                {
-                    Calculate.Content = "Stop";
-                    files.AutoGenerateColumns = true;
-                    backgroundWorker.RunWorkerAsync();
-                    wpfProgressBarAndText.Visibility = Visibility.Visible;
-                    fileExtension.Visibility = Visibility.Collapsed;
+        //private void selectPath_Click(object sender, RoutedEventArgs e)
+        //{
+        //    var folderDialog = new FolderBrowserDialog();
+        //    folderDialog.Description = @"Select folder to find similar files.";
 
-                }
-                else
-                {
-                    // Cancel the asynchronous operation.                 
-                    backgroundWorker.CancelAsync();
-                    backgroundWorker = new BackgroundWorker();
-                    backgroundWorker.DoWork += BackgroundWorker_DoWork;
-                    backgroundWorker.RunWorkerCompleted += BackgroundWorker_RunWorkerCompleted;
-                    backgroundWorker.WorkerSupportsCancellation = true;
-                    backgroundWorker.WorkerReportsProgress = true;
+        //    folderDialog.ShowNewFolderButton = false;
+        //    DialogResult result = folderDialog.ShowDialog();
+        //    if (result == System.Windows.Forms.DialogResult.OK)
+        //    {
+        //        CurrentPath = folderDialog.SelectedPath;
+        //        folderPath.Text = CurrentPath;
+        //    }
+        //    else
+        //    {
+        //        System.Windows.Forms.MessageBox.Show(@"You have not selected or canceled Path selection popup");
+        //    }
+        //}
 
-                    backgroundWorker = new BackgroundWorker();
-                    Calculate.Content = "Start";
-                    wpfProgressBarAndText.Visibility = Visibility.Collapsed;
-                    fileExtension.Visibility = Visibility.Visible;
-                }
-            }
-            else
-            {
-                System.Windows.Forms.MessageBox.Show(@"Please select correct folder");
-            }
-        }
+        //private void StartButton_Click(object sender, RoutedEventArgs e)
+        //{
+        //    if (Directory.Exists(CurrentPath))
+        //    {
 
-        
+        //        if (Calculate.Content.Equals("Start"))
+        //        {
+        //            Calculate.Content = "Stop";
+        //            files.AutoGenerateColumns = true;
+        //            backgroundWorker.RunWorkerAsync();
+        //            wpfProgressBarAndText.Visibility = Visibility.Visible;
+
+        //        }
+        //        else
+        //        {
+        //            // Cancel the asynchronous operation.                 
+        //            backgroundWorker.CancelAsync();
+        //            backgroundWorker = new BackgroundWorker();
+        //            backgroundWorker.DoWork += BackgroundWorker_DoWork;
+        //            backgroundWorker.RunWorkerCompleted += BackgroundWorker_RunWorkerCompleted;
+        //            backgroundWorker.WorkerSupportsCancellation = true;
+        //            backgroundWorker.WorkerReportsProgress = true;
+
+        //            backgroundWorker = new BackgroundWorker();
+        //            Calculate.Content = "Start";
+        //            wpfProgressBarAndText.Visibility = Visibility.Collapsed;
+
+        //        }
+        //    }
+        //    else
+        //    {
+        //        System.Windows.Forms.MessageBox.Show(@"Please select correct folder");
+        //    }
+        //}
+
+
     }
 }
