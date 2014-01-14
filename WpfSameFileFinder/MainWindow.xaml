@@ -4,10 +4,16 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:sameFileFinder="clr-namespace:SameFileFinder;assembly=SameFileFinder"
+        xmlns:wpfSameFileFinder="clr-namespace:WpfSameFileFinder"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
-    <Grid Background="DimGray" ShowGridLines="True">
+    <Window.Resources>
+        <wpfSameFileFinder:DataGridLenthConverter x:Key="converter"/>
+    </Window.Resources>
+    <Grid Background="DimGray" ShowGridLines="True" IsSharedSizeScope="True" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Visible">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto">
+            </RowDefinition>
             <RowDefinition Height="Auto">
             </RowDefinition>
             <RowDefinition Height="*">
@@ -27,10 +33,16 @@
             </Viewbox>
         </Grid>
 
-        <ListView ItemsSource ="{Binding Groups}" Name="GroupList"  Margin="5" Height="Auto" VerticalAlignment="Top" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Auto" ScrollViewer.HorizontalScrollBarVisibility="Auto" Background="DarkGray" BorderBrush="White" SelectionMode="Single" HorizontalAlignment="Stretch" Grid.Row="1">
+        <ListView  ItemsSource ="{Binding Groups}" Name="GroupList" Grid.Row="2" Margin="5,5,5,5" Height="Auto" VerticalAlignment="Top" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Background="DarkGray" BorderBrush="White" SelectionMode="Single" HorizontalAlignment="Stretch" >
             <ListView.ItemTemplate>
                 <DataTemplate DataType="{x:Type sameFileFinder:FileGroup}">
-                    <DataGrid ItemsSource="{Binding Files}" AutoGenerateColumns="True" ColumnWidth="*" Width="{Binding ElementName=GroupList, Path=ActualWidth}" SelectedItem="{Binding DataContext.SelectedItem, ElementName=GroupList, UpdateSourceTrigger=PropertyChanged}">
+                    <DataGrid ItemsSource="{Binding Files}" AutoGenerateColumns="false" Tag="{Binding ElementName=GroupList, Path=DataContext}"  Width="{Binding ElementName=GroupList, Path=ActualWidth}" SelectedItem="{Binding DataContext.SelectedItem, ElementName=GroupList, UpdateSourceTrigger=PropertyChanged}" HeadersVisibility="None" HorizontalScrollBarVisibility="Disabled">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header=" " Binding="{Binding Path}"  Width="{Binding Source={x:Reference GroupList}, Path=DataContext.PathWidth, Mode=TwoWay, Converter={StaticResource converter}}"/>
+                            <DataGridTextColumn Header=" " Binding="{Binding Name}"  Width="{Binding Source={x:Reference GroupList}, Path=DataContext.NameWidth, Mode=TwoWay, Converter={StaticResource converter}}"/>
+                            <DataGridTextColumn Header=" " Binding="{Binding Length}" Width="{Binding Source={x:Reference GroupList}, Path=DataContext.LengthWidth, Mode=TwoWay, Converter={StaticResource converter}}"/>
+                            <DataGridTextColumn Header=" " Binding="{Binding Hash}" Width="{Binding Source={x:Reference GroupList}, Path=DataContext.HashWidth, Mode=TwoWay, Converter={StaticResource converter}}"/>
+                        </DataGrid.Columns>
                     </DataGrid>
                 </DataTemplate>
             </ListView.ItemTemplate>
@@ -39,6 +51,20 @@
                     <MenuItem Header="Open Contain Folder"  Command="{Binding EnterTheFolder}"/>
                 </ContextMenu>
             </ListView.ContextMenu>
+        </ListView>
+        <ListView Name = "HeaderView"  Grid.Row="1" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Margin="5,0,5,5" VerticalAlignment="Top" >      
+            <ListView.Items>
+                <ListViewItem>
+                    <DataGrid  Width="{Binding ElementName=GroupList, Path=ActualWidth, UpdateSourceTrigger=PropertyChanged}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Path" Width="{Binding Source={x:Reference GroupList}, Path=DataContext.PathWidth, Mode=TwoWay, Converter={StaticResource converter}}"/>
+                            <DataGridTextColumn Header="Name" Width="{Binding Source={x:Reference GroupList}, Path=DataContext.NameWidth, Mode=TwoWay, Converter={StaticResource converter}}"/>
+                            <DataGridTextColumn Header="Length" Width="{Binding Source={x:Reference GroupList}, Path=DataContext.LengthWidth, Mode=TwoWay, Converter={StaticResource converter}}"/>
+                            <DataGridTextColumn Header="Hash" Width="{Binding Source={x:Reference GroupList},  Path=DataContext.HashWidth, Mode=TwoWay, Converter={StaticResource converter}}"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </ListViewItem>
+            </ListView.Items>
         </ListView>
     </Grid>
 </Window>

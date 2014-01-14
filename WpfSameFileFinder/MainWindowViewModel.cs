@@ -1,7 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Forms;
 using System.Windows.Input;
 using SameFileFinder;
@@ -26,6 +30,64 @@ namespace WpfSameFileFinder
                 }
             }
         }
+
+        private const int InitialColumnWidth = 60;
+
+        private int m_PathWidth = InitialColumnWidth;
+        public int PathWidth {
+            get { return m_PathWidth; }
+            set
+            {
+                if (value != m_PathWidth)
+                {
+                    m_PathWidth = value;
+                    OnPropertyChanged("PathWidth");
+                }
+            }
+        }
+
+        private int m_NameWidth = InitialColumnWidth;
+        public int NameWidth
+        {
+            get { return m_NameWidth; }
+            set
+            {
+                if (value != m_NameWidth)
+                {
+                    m_NameWidth = value;
+                    OnPropertyChanged("NameWidth");
+                }
+            }
+        }
+
+        private int m_LengthWidth = InitialColumnWidth;
+        public int LengthWidth
+        {
+            get { return m_LengthWidth; }
+            set
+            {
+                if (value != m_LengthWidth)
+                {
+                    m_LengthWidth = value;
+                    OnPropertyChanged("LengthWidth");
+                }
+            }
+        }
+
+        private int m_HashWidth = InitialColumnWidth;
+        public int HashWidth
+        {
+            get { return m_HashWidth; }
+            set
+            {
+                if (value != m_HashWidth)
+                {
+                    m_HashWidth = value;
+                    OnPropertyChanged("HashWidth");
+                }
+            }
+        }
+
         private string m_CurrentPath;
         public string CurrentPath
         {
@@ -148,6 +210,33 @@ namespace WpfSameFileFinder
             else
             {
                 System.Windows.Forms.MessageBox.Show(@"You have not selected or canceled Path selection popup");
+            }
+        }
+    }
+
+    public class DataGridLenthConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return Convert(value, targetType);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return Convert(value, targetType);
+        }
+
+        private static object Convert(object value, Type targetType)
+        {
+            if (targetType == typeof (int))
+            {
+                var length = (DataGridLength) value;
+                return length.Value;
+            }
+            else
+            {
+                var length = (int) value;
+                return new DataGridLength(length);
             }
         }
     }
