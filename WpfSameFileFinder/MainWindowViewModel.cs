@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -9,6 +10,7 @@ using System.Windows.Data;
 using System.Windows.Forms;
 using System.Windows.Input;
 using SameFileFinder;
+using FileInfo = SameFileFinder.FileInfo;
 
 namespace WpfSameFileFinder
 {
@@ -17,9 +19,25 @@ namespace WpfSameFileFinder
         private DelegateCommand m_GetGroupsCommand;
         private DelegateCommand m_SetThePath;
         private DelegateCommand m_EnterTheFolder;
+        private DelegateCommand m_FindTheDirectories;
+
+        private double m_MaxWidth;
+        public double MaxWidth
+        {
+            get { return m_MaxWidth; }
+            set
+            {
+                if (value != m_MaxWidth)
+                {
+                    m_MaxWidth = value;
+                    OnPropertyChanged("MaxWidth");
+                }
+            }
+        }
 
         private bool m_Entered;
-        public bool Entered {
+        public bool Entered
+        {
             get { return m_Entered; }
             set
             {
@@ -33,8 +51,57 @@ namespace WpfSameFileFinder
 
         private const int InitialColumnWidth = 60;
 
+        private int m_MaxPathWidth ;
+        public int MaxPathWidth
+        {
+            get { return m_MaxPathWidth; }
+            set
+            {
+                if (value != m_MaxPathWidth )
+                {
+                    m_MaxPathWidth = value;
+                    
+                    OnPropertyChanged("MaxPathWidth");
+                    
+                }
+            }
+        }
+
+        private int m_MaxNameWidth ;
+        public int MaxNameWidth
+        {
+            get { return m_MaxNameWidth; }
+            set
+            {
+                if (value != m_MaxNameWidth)
+                {
+                    m_MaxNameWidth = value;
+                    OnPropertyChanged("MaxNameWidth");
+                    
+                    
+                }
+            }
+        }
+
+        private int m_MaxLengthWidth ;
+        public int MaxLengthWidth
+        {
+            get { return m_MaxLengthWidth; }
+            set
+            {
+                if (value != m_MaxLengthWidth)
+                {
+                    m_MaxLengthWidth = value;
+                   
+                    OnPropertyChanged("MaxLengthWidth");
+                    
+                }
+            }
+        }
+
         private int m_PathWidth = InitialColumnWidth;
-        public int PathWidth {
+        public int PathWidth
+        {
             get { return m_PathWidth; }
             set
             {
@@ -52,10 +119,11 @@ namespace WpfSameFileFinder
             get { return m_NameWidth; }
             set
             {
-                if (value != m_NameWidth)
+                if (value != m_NameWidth )
                 {
                     m_NameWidth = value;
                     OnPropertyChanged("NameWidth");
+
                 }
             }
         }
@@ -70,6 +138,7 @@ namespace WpfSameFileFinder
                 {
                     m_LengthWidth = value;
                     OnPropertyChanged("LengthWidth");
+
                 }
             }
         }
@@ -84,6 +153,7 @@ namespace WpfSameFileFinder
                 {
                     m_HashWidth = value;
                     OnPropertyChanged("HashWidth");
+                    
                 }
             }
         }
@@ -100,8 +170,21 @@ namespace WpfSameFileFinder
                 if (value != m_CurrentPath)
                 {
                     m_CurrentPath = value;
+                    FindDirectories();
                     OnPropertyChanged("CurrentPath");
                 }
+            }
+        }
+
+        public ICommand FindTheDirectories
+        {
+            get
+            {
+                if (m_FindTheDirectories == null)
+                {
+                    m_FindTheDirectories = new DelegateCommand(param => FindDirectories());
+                }
+                return m_FindTheDirectories;
             }
         }
 
@@ -181,7 +264,7 @@ namespace WpfSameFileFinder
             {
                 files.AddRange(group.Files);
             }
-            
+
             var fileFolder = new ProcessStartInfo("explorer.exe", "/select,\"" + SelectedItem.Path + "\"");
             fileFolder.UseShellExecute = false;
             Process.Start(fileFolder);
@@ -189,6 +272,8 @@ namespace WpfSameFileFinder
 
         private void GetGroupsOfFiles()
         {
+            ShowPopUp = false;
+
             var manager = new FileManager();
             var logger = new Logger("", "log.txt");
             var finder = new Finder();
@@ -212,6 +297,47 @@ namespace WpfSameFileFinder
                 System.Windows.Forms.MessageBox.Show(@"You have not selected or canceled Path selection popup");
             }
         }
+
+        private bool m_ShowPopUp;
+        public bool ShowPopUp
+        {
+            get { return m_ShowPopUp; }
+            set
+            {
+                if (value != m_ShowPopUp)
+                {
+                    m_ShowPopUp = value;
+                    OnPropertyChanged("ShowPopUp");
+                }
+            }
+        }
+
+        private List<DirectoryInfo> m_Directories;
+        public List<DirectoryInfo> Directories
+        {
+            get { return m_Directories; }
+            set
+            {
+                if (value != m_Directories)
+                {
+                    m_Directories = value;
+                    OnPropertyChanged("Directories");
+                }
+            }
+        }
+
+        private void FindDirectories()
+        {
+            ShowPopUp = true;
+            try
+            {
+                var di = new DirectoryInfo(CurrentPath);
+                Directories = di.GetDirectories("*.*", SearchOption.TopDirectoryOnly).ToList();
+            }
+            catch (Exception)
+            {
+            }
+        }
     }
 
     public class DataGridLenthConverter : IValueConverter
@@ -228,14 +354,14 @@ namespace WpfSameFileFinder
 
         private static object Convert(object value, Type targetType)
         {
-            if (targetType == typeof (int))
+            if (targetType == typeof(int))
             {
-                var length = (DataGridLength) value;
+                var length = (DataGridLength)value;
                 return length.Value;
             }
             else
             {
-                var length = (int) value;
+                var length = (int)value;
                 return new DataGridLength(length);
             }
         }
