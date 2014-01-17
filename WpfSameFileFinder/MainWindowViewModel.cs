@@ -4,13 +4,14 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Forms;
 using System.Windows.Input;
 using SameFileFinder;
 using FileInfo = SameFileFinder.FileInfo;
+using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
+using ListView = System.Windows.Controls.ListView;
 
 namespace WpfSameFileFinder
 {
@@ -20,9 +21,10 @@ namespace WpfSameFileFinder
         private DelegateCommand m_SetThePath;
         private DelegateCommand m_EnterTheFolder;
         private DelegateCommand m_FindTheDirectories;
+        private DelegateCommand m_KeyDown;
 
-        private double m_MaxWidth;
-        public double MaxWidth
+        private int m_MaxWidth = 525;
+        public int MaxWidth
         {
             get { return m_MaxWidth; }
             set
@@ -30,6 +32,7 @@ namespace WpfSameFileFinder
                 if (value != m_MaxWidth)
                 {
                     m_MaxWidth = value;
+                    HashWidth = m_MaxWidth - LengthWidth - NameWidth - PathWidth;
                     OnPropertyChanged("MaxWidth");
                 }
             }
@@ -51,54 +54,6 @@ namespace WpfSameFileFinder
 
         private const int InitialColumnWidth = 60;
 
-        private int m_MaxPathWidth ;
-        public int MaxPathWidth
-        {
-            get { return m_MaxPathWidth; }
-            set
-            {
-                if (value != m_MaxPathWidth )
-                {
-                    m_MaxPathWidth = value;
-                    
-                    OnPropertyChanged("MaxPathWidth");
-                    
-                }
-            }
-        }
-
-        private int m_MaxNameWidth ;
-        public int MaxNameWidth
-        {
-            get { return m_MaxNameWidth; }
-            set
-            {
-                if (value != m_MaxNameWidth)
-                {
-                    m_MaxNameWidth = value;
-                    OnPropertyChanged("MaxNameWidth");
-                    
-                    
-                }
-            }
-        }
-
-        private int m_MaxLengthWidth ;
-        public int MaxLengthWidth
-        {
-            get { return m_MaxLengthWidth; }
-            set
-            {
-                if (value != m_MaxLengthWidth)
-                {
-                    m_MaxLengthWidth = value;
-                   
-                    OnPropertyChanged("MaxLengthWidth");
-                    
-                }
-            }
-        }
-
         private int m_PathWidth = InitialColumnWidth;
         public int PathWidth
         {
@@ -119,7 +74,7 @@ namespace WpfSameFileFinder
             get { return m_NameWidth; }
             set
             {
-                if (value != m_NameWidth )
+                if (value != m_NameWidth)
                 {
                     m_NameWidth = value;
                     OnPropertyChanged("NameWidth");
@@ -138,22 +93,21 @@ namespace WpfSameFileFinder
                 {
                     m_LengthWidth = value;
                     OnPropertyChanged("LengthWidth");
-
                 }
             }
         }
 
-        private int m_HashWidth = InitialColumnWidth;
+        private int m_HashWidth = 525 - 3 * InitialColumnWidth;
         public int HashWidth
         {
-            get { return m_HashWidth; }
+            get { return m_HashWidth = MaxWidth - LengthWidth - NameWidth - PathWidth; }
             set
             {
                 if (value != m_HashWidth)
                 {
                     m_HashWidth = value;
                     OnPropertyChanged("HashWidth");
-                    
+
                 }
             }
         }
@@ -221,6 +175,43 @@ namespace WpfSameFileFinder
                     m_GetGroupsCommand = new DelegateCommand(param => GetGroupsOfFiles(), param => ValidPath());
                 }
                 return m_GetGroupsCommand;
+            }
+        }
+
+        public ICommand KeyDown
+        {
+            get
+            {
+                if (m_KeyDown == null)
+                {
+                    m_KeyDown = new DelegateCommand(param => KeyPressed(param));
+                }
+                return m_KeyDown;
+            }
+        }
+
+        public ICommand FocusAutoComplete
+        {
+            get { return new DelegateCommand(ExecuteFocus); }
+        }
+
+        private void ExecuteFocus(object o)
+        {
+            var listView = o as ListView;
+            if (listView != null)
+            {
+                listView.Focus();
+            }
+
+
+        }
+
+        private void KeyPressed(object o)
+        {
+            var k = (System.Windows.Input.KeyEventArgs) o;
+            if (k.Key == Key.Down)
+            {
+
             }
         }
 

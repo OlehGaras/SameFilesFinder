@@ -5,12 +5,23 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:sameFileFinder="clr-namespace:SameFileFinder;assembly=SameFileFinder"
         xmlns:wpfSameFileFinder="clr-namespace:WpfSameFileFinder"
+        xmlns:i="clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity"
+        xmlns:command="clr-namespace:GalaSoft.MvvmLight.Command;assembly=GalaSoft.MvvmLight.Extras.WPF45"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow" Height="350" Width="{Binding MaxWidth,Mode=TwoWay}">
     <Window.Resources>
         <wpfSameFileFinder:DataGridLenthConverter x:Key="converter"/>
+        
+        <Style x:Key="Key" TargetType="{x:Type Grid}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ElementName=FolderPath, Path=Text.Length}" Value="3">
+                    <Setter Property="FocusManager.FocusedElement" Value="{Binding ElementName=temp}"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
-    <Grid Background="DimGray" ShowGridLines="True" IsSharedSizeScope="True" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Visible">
+
+    <Grid Style="{StaticResource Key}" Background="DimGray" ShowGridLines="True" IsSharedSizeScope="True" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Visible">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto">
             </RowDefinition>
@@ -19,16 +30,40 @@
             <RowDefinition Height="*">
             </RowDefinition>
         </Grid.RowDefinitions>
+
         <StackPanel x:Name="LastStackPanel" Orientation="Horizontal" Grid.Row="0" Margin="2" VerticalAlignment="Top" HorizontalAlignment="Center">
             <!--<ComboBox Focusable="True" IsDropDownOpen="true" IsEditable="True" x:Name="FolderPath" Text = "{Binding CurrentPath, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Margin="5"  Padding="2"  Background="White" MinWidth="300" ItemsSource="{Binding Directories}" >
                 <ComboBox.CommandBindings>
                     
                 </ComboBox.CommandBindings>
             </ComboBox>-->
-            <TextBox x:Name="FolderPath" Margin="5" Text = "{Binding CurrentPath, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Padding="2"  Background="White" MinWidth="300">
+            <StackPanel.Style>
+                <Style>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ElementName=FolderPath, Path=Text.Length}" Value="3">
+                            <Setter Property="FocusManager.FocusedElement" Value="{Binding ElementName=listView}"/>
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding ElementName=CodeDigit1, Path=Text.Length}" Value="3">
+                            <Setter Property="FocusManager.FocusedElement" Value="{Binding ElementName=CodeDigit2}"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+            <TextBox  Name="CodeDigit1"  Width="20"/>
+            <TextBox  Name="CodeDigit2" Width="20"/>
+
+            <TextBox Focusable="True" Name="FolderPath" Margin="5" Text = "{Binding CurrentPath, Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}" Padding="2"  Background="White" MinWidth="300">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger  EventName="KeyDown" >
+                        <command:EventToCommand Command="{Binding KeyDown}"  CommandParameter="{Binding RelativeSource= { RelativeSource FindAncestor,  AncestorType={x:Type ListView}, AncestorLevel=1}}"  PassEventArgsToCommand="True"  />
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
             </TextBox>
-            <Popup IsOpen="{Binding ShowPopUp}">
-                <ListView ItemsSource="{Binding Directories}">
+
+            <Popup  Focusable="True" x:Name="PopUp" IsOpen="{Binding ShowPopUp}" StaysOpen="{Binding ElementName=FolderPath,Path=IsKeyboardFocused}">
+                <!--<TextBox Focusable="True" x:Name="temp" Margin="5" Text = "..."  Background="White">
+                </TextBox>-->
+                <ListView  Focusable="True"  x:Name="listView" ItemsSource="{Binding Directories}">
                 </ListView>
             </Popup>
             <Button Content="..."   x:Name="SelectPath"  Margin="3" Padding="3" Command="{Binding SetThePath}"/>
@@ -42,19 +77,20 @@
             </Viewbox>
         </Grid>
 
-        <ListView  ItemsSource ="{Binding Groups}"  Name="GroupList" Grid.Row="2" Margin="5,5,5,5" Height="Auto" VerticalAlignment="Top" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Background="DarkGray" BorderBrush="White" SelectionMode="Single" HorizontalAlignment="Stretch" >
+        <ListView  ItemsSource ="{Binding Groups}"  Name="GroupList" Grid.Row="2" Margin="5,5,5,5" Height="Auto" VerticalAlignment="Top" ScrollViewer.CanContentScroll="True" ScrollViewer.VerticalScrollBarVisibility="Visible" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Background="DarkGray" BorderBrush="White" SelectionMode="Single" HorizontalAlignment="Stretch" 
+                   >
             <ListView.ItemTemplate>
                 <DataTemplate DataType="{x:Type sameFileFinder:FileGroup}">
-                    <DataGrid ItemsSource="{Binding Files}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutoGenerateColumns="false" Tag="{Binding ElementName=GroupList, Path=DataContext}" Width="{Binding ElementName=GroupList, Path=ActualWidth,UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding DataContext.SelectedItem, ElementName=GroupList, UpdateSourceTrigger=PropertyChanged}" HeadersVisibility="None" HorizontalScrollBarVisibility="Disabled">
+                    <DataGrid CanUserReorderColumns="False" ItemsSource="{Binding Files}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutoGenerateColumns="false" Tag="{Binding ElementName=GroupList, Path=DataContext}" Width="{Binding ElementName=GroupList, Path=ActualWidth,UpdateSourceTrigger=PropertyChanged}" SelectedItem="{Binding DataContext.SelectedItem, ElementName=GroupList, UpdateSourceTrigger=PropertyChanged}" HeadersVisibility="None" HorizontalScrollBarVisibility="Disabled">
                         <DataGrid.Columns>
-                            <DataGridTextColumn Header=" "  Binding="{Binding Path}" MinWidth="60"  Width="{Binding Source={x:Reference GroupList}, Path=DataContext.PathWidth, Mode=TwoWay, Converter={StaticResource converter}, UpdateSourceTrigger=PropertyChanged}"
-                                                MaxWidth="{Binding Source={x:Reference GroupList}, Path=DataContext.MaxPathWidth, Mode=TwoWay, Converter={StaticResource converter}, UpdateSourceTrigger=PropertyChanged}"/>
-                            <DataGridTextColumn Header=" "  Binding="{Binding Name}" MinWidth="60"  Width="{Binding Source={x:Reference GroupList}, Path=DataContext.NameWidth, Mode=TwoWay, Converter={StaticResource converter}, UpdateSourceTrigger=PropertyChanged}"
-                                                MaxWidth="{Binding Source={x:Reference GroupList}, Path=DataContext.MaxNameWidth, Mode=TwoWay, Converter={StaticResource converter}, UpdateSourceTrigger=PropertyChanged}"/>
-                            <DataGridTextColumn Header=" "  Binding="{Binding Length}" MinWidth="60" Width="{Binding Source={x:Reference GroupList}, Path=DataContext.LengthWidth, Mode=TwoWay, Converter={StaticResource converter}, UpdateSourceTrigger=PropertyChanged}"
-                                                MaxWidth="{Binding Source={x:Reference GroupList}, Path=DataContext.MaxLengthWidth, Mode=TwoWay, Converter={StaticResource converter}, UpdateSourceTrigger=PropertyChanged}"/>
-                            <DataGridTextColumn Header=" "  CanUserResize="False"  Binding="{Binding Hash}" MinWidth="60" Width="*"/>
-                            <!--<DataGridTextColumn Header=" "  Binding="{Binding Hash}" Width="{Binding Source={x:Reference GroupList}, Path=DataContext.HashWidth, Mode=TwoWay, Converter={StaticResource converter}}"/>-->
+                            <DataGridTextColumn Header=" "  Binding="{Binding Path}" MinWidth="60"  Width="{Binding Source={x:Reference GroupList}, Path=DataContext.PathWidth, Mode=TwoWay, Converter={StaticResource converter}, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <DataGridTextColumn Header=" "  Binding="{Binding Name}" MinWidth="60"  Width="{Binding Source={x:Reference GroupList}, Path=DataContext.NameWidth, Mode=TwoWay, Converter={StaticResource converter}, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <DataGridTextColumn Header=" "  Binding="{Binding Length}" MinWidth="60" Width="{Binding Source={x:Reference GroupList}, Path=DataContext.LengthWidth, Mode=TwoWay, Converter={StaticResource converter}, UpdateSourceTrigger=PropertyChanged}"/>
+
+                            <!--<DataGridTextColumn Header=" "  Binding="{Binding Hash}" MinWidth="60" Width="*" />-->
+                            <DataGridTextColumn Header=" "  Binding="{Binding Hash}" Width="{Binding Source={x:Reference GroupList}, Path=DataContext.HashWidth, Mode=TwoWay, Converter={StaticResource converter}}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </DataTemplate>
@@ -65,23 +101,22 @@
                 </ContextMenu>
             </ListView.ContextMenu>
         </ListView>
-        <ListView Name = "HeaderView" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Grid.Row="1" SelectionMode="Single" HorizontalAlignment="Stretch"  Margin="5,0,5,5" VerticalAlignment="Top" Width="{Binding ElementName=GroupList, Path=ActualWidth, UpdateSourceTrigger=PropertyChanged}">
-            
+        <ListView Name = "HeaderView" HorizontalContentAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled" Grid.Row="1" SelectionMode="Single" HorizontalAlignment="Stretch"  Margin="5,0,5,5" VerticalAlignment="Top" MaxWidth="{Binding ElementName=GroupList, Path=ActualWidth, UpdateSourceTrigger=PropertyChanged}" >
             <ListView.Items>
-         
                 <ListViewItem>
-                    <DataGrid MinColumnWidth="60"   ScrollViewer.HorizontalScrollBarVisibility="Disabled" MaxWidth="{Binding ElementName=GroupList, Path=ActualWidth, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch">
+                    <DataGrid CanUserReorderColumns="False"  MinColumnWidth="60"  AutoGenerateColumns="False"  Width="{Binding DataContext.MaxWidth, Mode=TwoWay}" ScrollViewer.HorizontalScrollBarVisibility="Disabled" MaxWidth="{Binding ElementName=GroupList, Path=ActualWidth, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Stretch">
                         <DataGrid.Columns>
-                            <DataGridTextColumn  Header="Path"  Width="{Binding Source={x:Reference GroupList}, Path=DataContext.PathWidth, Mode=TwoWay, Converter={StaticResource converter}, UpdateSourceTrigger=PropertyChanged}"
-                                                 MaxWidth="{Binding Source={x:Reference GroupList}, Path=DataContext.MaxPathWidth, Mode=TwoWay, Converter={StaticResource converter}, UpdateSourceTrigger=PropertyChanged}"/>
-                            
+                            <DataGridTextColumn   Header="Path"  Width="{Binding Source={x:Reference GroupList}, Path=DataContext.PathWidth, Mode=TwoWay, Converter={StaticResource converter}, UpdateSourceTrigger=PropertyChanged}"
+                                                 />
+
                             <DataGridTextColumn  Header="Name"  Width="{Binding Source={x:Reference GroupList}, Path=DataContext.NameWidth, Mode=TwoWay, Converter={StaticResource converter}, UpdateSourceTrigger=PropertyChanged}"  
-                                                 MaxWidth="{Binding Source={x:Reference GroupList}, Path=DataContext.MaxNameWidth, Mode=TwoWay, Converter={StaticResource converter}, UpdateSourceTrigger=PropertyChanged}"/>
-                            
+                                                 />
+
                             <DataGridTextColumn  Header="Length" Width="{Binding Source={x:Reference GroupList}, Path=DataContext.LengthWidth, Mode=TwoWay, Converter={StaticResource converter}, UpdateSourceTrigger=PropertyChanged}" 
-                                                 MaxWidth="{Binding Source={x:Reference GroupList}, Path=DataContext.MaxLengthWidth, Mode=TwoWay, Converter={StaticResource converter}, UpdateSourceTrigger=PropertyChanged}"/>
-                            
-                            <DataGridTextColumn  Header="Hash" Width="*"/>                          
+                                                 />
+
+                            <DataGridTextColumn  Header="Hash" CanUserResize="True" 
+                                                 Width="{Binding Source={x:Reference GroupList}, Path=DataContext.HashWidth, Mode=TwoWay, Converter={StaticResource converter}, UpdateSourceTrigger=PropertyChanged}" />
                         </DataGrid.Columns>
                     </DataGrid>
                 </ListViewItem>
