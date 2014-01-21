@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using FakeItEasy;
 using NUnit.Framework;
 using SameFileFinder;
@@ -61,7 +62,7 @@ namespace SameFileFinderTests
             var file1 = new FileInfo(filePath, 0, "", "");
             var file2 = new FileInfo(filePath, 0, "", "");
 
-            Assert.IsTrue(manager.ByteCompare(file1, file2, logger));
+            Assert.IsTrue(manager.ByteCompare(file1, file2, logger, A<CancellationToken>.Ignored));
         }
 
         [Test]
@@ -71,7 +72,7 @@ namespace SameFileFinderTests
             var file = A.Fake<FileInfo>();
             var manager = new FileManager();
 
-            manager.ByteCompare(file, file, logger);
+            manager.ByteCompare(file, file, logger, A<CancellationToken>.Ignored);
 
             A.CallTo(() => logger.Write(A<Exception>.Ignored)).MustHaveHappened();
         }
@@ -88,7 +89,7 @@ namespace SameFileFinderTests
             var file1 = new FileInfo(firstFilePath, 0, "", "");
             var file2 = new FileInfo(secondfilePath, 0, "", "");
 
-            Assert.IsFalse(manager.ByteCompare(file1, file2, logger));
+            Assert.IsFalse(manager.ByteCompare(file1, file2, logger, A<CancellationToken>.Ignored));
         }
 
         [Test]

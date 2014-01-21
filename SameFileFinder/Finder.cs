@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
+using System.Threading;
 
 
 namespace SameFileFinder
@@ -29,7 +31,7 @@ namespace SameFileFinder
             return string.Empty;
         }
 
-        public List<FileGroup> FindGroupOfSameFiles(string path, ILogger logger, IFileManager fileManager)
+        public List<FileGroup> FindGroupOfSameFiles(string path, ILogger logger, IFileManager fileManager, CancellationToken e)
         {
             var files = fileManager.DirSearch(path, logger);
             if (files.Count == 0)
@@ -40,9 +42,11 @@ namespace SameFileFinder
             var checkedGroups = new List<FileGroup>();
             var stopWatch = new Stopwatch();
             stopWatch.Start();
-            var query = groupsWithSameLength.Select(group => CheckTheGroup(group, logger, fileManager));
+            var query = groupsWithSameLength.Select(group => CheckTheGroup(group, logger, fileManager,e));
             foreach (var group in query)
             {
+                if (e.IsCancellationRequested)
+                    return new List<FileGroup>();
                 if (group != null)
                     checkedGroups.AddRange(group);
             }
@@ -75,7 +79,7 @@ namespace SameFileFinder
             return groups;
         }
 
-        public List<FileGroup> CheckTheGroup(IFileGroup group, ILogger logger, IFileManager manager)
+        public List<FileGroup> CheckTheGroup(IFileGroup group, ILogger logger, IFileManager manager,CancellationToken e)
         {
             var resultList = new List<FileGroup>();
             var files = group.Files;
@@ -87,6 +91,8 @@ namespace SameFileFinder
 
             for (int i = 0; i < files.Count; i++)
             {
+                if (e.IsCancellationRequested)
+                    return new List<FileGroup>();
                 files[i].Hash = HashTheFile(files[i].Path, logger);
             }
 
@@ -94,16 +100,18 @@ namespace SameFileFinder
 
             var groupsWithSameHash = FormTheGroup(files, file => file.Hash);
 
-            var query = groupsWithSameHash.Select(gr => CompareFiles(gr, logger, manager));
+            var query = groupsWithSameHash.Select(gr => CompareFiles(gr, logger, manager,e));
             foreach (var gr in query)
             {
+                if (e.IsCancellationRequested)
+                    return new List<FileGroup>();
                 resultList.AddRange(gr);
             }
 
             return resultList;
         }
 
-        public List<FileGroup> CompareFiles(IFileGroup group, ILogger logger, IFileManager manager)
+        public List<FileGroup> CompareFiles(IFileGroup group, ILogger logger, IFileManager manager, CancellationToken e)
         {
             if (group.Files.Count < 2)
             {
@@ -122,16 +130,18 @@ namespace SameFileFinder
 
                 while (enumerator.MoveNext())
                 {
-                    if (manager.ByteCompare(curr, enumerator.Current, logger))
+                    if (manager.ByteCompare(curr, enumerator.Current, logger,e))
                     {
                         result.Add(enumerator.Current);
                     }
+                    if (e.IsCancellationRequested)
+                        return new List<FileGroup>();
                 }
 
                 set.RemoveWhere(file => result.Files.Contains(file));
                 enumerator.Dispose();
                 if (result.Files.Count > 1)
-                    resultList.Add(result);
+                    resultList.Add(result);               
             }
             return resultList;
         }

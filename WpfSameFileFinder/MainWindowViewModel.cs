@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Data;
@@ -30,7 +33,48 @@ namespace WpfSameFileFinder
         private ListView m_Popup;
         private TextBox m_Tb;
 
+        private BackgroundWorker m_BackgroundWorker = new BackgroundWorker();
         private const int InitialColumnWidth = 100;
+        private CancellationTokenSource m_Cts;
+
+        public MainWindowViewModel()
+        {
+            m_Cts = new CancellationTokenSource();
+            m_BackgroundWorker.DoWork += GetGroupsOfFiles;
+            m_BackgroundWorker.RunWorkerCompleted += BackgroundWorkerRunWorkerCompleted;
+            m_BackgroundWorker.WorkerSupportsCancellation = true;
+            m_BackgroundWorker.WorkerReportsProgress = true;
+
+            //lastStackPanel.RegisterName("wpfProgressBar", wpfProgressBar);
+        }
+
+        private bool m_Visible = true;
+        public bool Visible
+        {
+            get { return m_Visible; }
+            set
+            {
+                if (value != m_Visible)
+                {
+                    m_Visible = value;
+                    OnPropertyChanged("Visible");
+                }
+            }
+        }
+
+        private string m_StartContent = "Start";
+        public string StartContent
+        {
+            get { return m_StartContent; }
+            set
+            {
+                if (value != m_StartContent)
+                {
+                    m_StartContent = value;
+                    OnPropertyChanged("StartContent");
+                }
+            }
+        }
 
         private List<FileGroup> m_Groups;
         public List<FileGroup> Groups
@@ -96,9 +140,8 @@ namespace WpfSameFileFinder
             {
                 if (value != m_MaxWidth)
                 {
-                    m_HashWidth = m_MaxWidth-30 - m_PathWidth - m_NameWidth - m_LengthWidth;
+                    m_HashWidth = m_MaxWidth - m_PathWidth - m_NameWidth - m_LengthWidth - 30;
                     m_MaxWidth = value;
-                    
                     OnPropertyChanged("MaxWidth");
                     OnPropertyChanged("HashWidth");
                 }
@@ -125,22 +168,14 @@ namespace WpfSameFileFinder
             get { return m_PathWidth; }
             set
             {
-                if (value != m_PathWidth && m_NameWidth >= InitialColumnWidth)
+                if (value != m_PathWidth)
                 {
+                    if (m_NameWidth <= InitialColumnWidth && value > m_PathWidth)
+                        return;
                     m_NameWidth += m_PathWidth - value;
                     m_PathWidth = value;
                     OnPropertyChanged("PathWidth");
                     OnPropertyChanged("NameWidth");
-                }
-                else
-                {
-                    if (value < m_PathWidth)
-                    {
-                        m_NameWidth += m_PathWidth - value;
-                        m_PathWidth = value;
-                        OnPropertyChanged("PathWidth");
-                        OnPropertyChanged("NameWidth");
-                    }
                 }
             }
         }
@@ -151,23 +186,16 @@ namespace WpfSameFileFinder
             get { return m_NameWidth; }
             set
             {
-                if (value != m_NameWidth && m_LengthWidth >= InitialColumnWidth)
+                if (value != m_NameWidth)
                 {
+                    if (m_LengthWidth <= InitialColumnWidth && value > m_NameWidth)
+                        return;
                     m_LengthWidth += m_NameWidth - value;
                     m_NameWidth = value;
                     OnPropertyChanged("NameWidth");
                     OnPropertyChanged("LengthWidth");
                 }
-                else
-                {
-                    if (value < m_NameWidth)
-                    {
-                        m_LengthWidth += m_NameWidth - value;
-                        m_NameWidth = value;
-                        OnPropertyChanged("NameWidth");
-                        OnPropertyChanged("LengthWidth");
-                    }
-                }
+
             }
         }
 
@@ -177,56 +205,29 @@ namespace WpfSameFileFinder
             get { return m_LengthWidth; }
             set
             {
-                if (value != m_LengthWidth && m_HashWidth >= InitialColumnWidth)
+                if (value != m_LengthWidth)
                 {
+                    if (m_HashWidth <= InitialColumnWidth && value > m_LengthWidth)
+                        return;
                     m_HashWidth += m_LengthWidth - value;
-                    m_LengthWidth = value;                 
+                    m_LengthWidth = value;
                     OnPropertyChanged("LengthWidth");
                     OnPropertyChanged("HashWidth");
-                }
-                else
-                {
-                    if (value < m_LengthWidth)
-                    {
-                        m_HashWidth += m_LengthWidth - value;
-                        m_LengthWidth = value;
-                        OnPropertyChanged("LengthWidth");
-                        OnPropertyChanged("HashWidth");
-                    }
                 }
             }
         }
 
-        private int m_HashWidth = m_MaxWidth - 3*InitialColumnWidth-30;
+        private int m_HashWidth = m_MaxWidth - 3 * InitialColumnWidth - 30;
         public int HashWidth
         {
-            get { return m_HashWidth ; }
+            get { return m_HashWidth; }
             set
             {
                 if (value != m_HashWidth)
                 {
-
                     m_HashWidth = value;
                     OnPropertyChanged("HashWidth");
-
                 }
-                //if (value != m_HashWidth && m_HashWidth >= InitialColumnWidth)
-                //{
-                //    m_LengthWidth += m_HashWidth - value;
-                //    m_HashWidth = value;
-                //    OnPropertyChanged("HashWidth");
-                //    OnPropertyChanged("LengthWidth");
-                //}
-                //else
-                //{
-                //    if (value < m_HashWidth)
-                //    {
-                //        m_LengthWidth += m_HashWidth - value;
-                //        m_HashWidth = value;
-                //        OnPropertyChanged("HashWidth");
-                //        OnPropertyChanged("LengthWidth");
-                //    }
-                //}
             }
         }
 
@@ -372,17 +373,25 @@ namespace WpfSameFileFinder
             }
             if (k.Key == Key.Return)
             {
-                CurrentPath += m_Popup.SelectedItem + @"\";
+                int startIndex = CurrentPath.LastIndexOf(@"\", StringComparison.Ordinal);
+                CurrentPath = CurrentPath.Remove(startIndex, CurrentPath.Length - startIndex);
+                CurrentPath += @"\" + m_Popup.SelectedItem + @"\";
                 if (m_Tb != null)
                 {
                     m_Tb.Focus();
                     m_Tb.SelectionStart = m_Tb.Text.Length;
+                    m_Tb.ScrollToEnd();
                     if (m_Popup.Items.Count == 0)
                     {
-                        ((Popup) m_Popup.Parent).IsOpen = false;
+                        ((Popup)m_Popup.Parent).IsOpen = false;
                     }
                 }
             }
+            //if (k.Key == Key.Escape)
+            //{
+            //    ((Popup) m_Popup.Parent).IsOpen = false;
+            //    m_Tb.Focus();
+            //}
         }
 
         private void OnTextBoxPressed(object o)
@@ -395,17 +404,21 @@ namespace WpfSameFileFinder
                     m_Popup.Focus();
                 }
             }
+            if (k.Key == Key.Escape)
+            {
+                ((Popup)m_Popup.Parent).IsOpen = false;
+            }
 
         }
 
         private void SavePopup(object o)
         {
-            m_Popup = (ListView)((Popup)((StackPanel)o).Children[1]).Child;
+            m_Popup = (ListView)o;
         }
 
         private void SaveTb(object o)
         {
-            m_Tb = (TextBox)((StackPanel)o).Children[0];
+            m_Tb = (TextBox)o;
         }
 
         private void GoToTheFolder(object o)
@@ -423,13 +436,51 @@ namespace WpfSameFileFinder
 
         private void GetGroupsOfFiles()
         {
-            ShowPopUp = false;
+            if (String.Compare(StartContent, "Start", StringComparison.OrdinalIgnoreCase) == 0)
+            {
+                StartContent = "Stop";
+                ShowPopUp = false;
+                Visible = false;
+                m_BackgroundWorker = new BackgroundWorker();
+                m_BackgroundWorker.DoWork += GetGroupsOfFiles;
+                m_BackgroundWorker.RunWorkerCompleted += BackgroundWorkerRunWorkerCompleted;
+                m_BackgroundWorker.WorkerSupportsCancellation = true;
+                m_BackgroundWorker.RunWorkerAsync();
+                m_Cts = new CancellationTokenSource();
+            }
+            else
+            {
+                m_BackgroundWorker.CancelAsync();
+                m_Cts.Cancel();
+            }
+        }
 
+        private void BackgroundWorkerRunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            try
+            {
+                Visible = true;
+                if (!e.Cancelled)
+                {
+                    Groups = (List<FileGroup>)e.Result;
+                }
+            }
+            finally
+            {
+                StartContent = "Start";
+            }
+        }
+
+        private void GetGroupsOfFiles(object sender, DoWorkEventArgs e)
+        {
+            var token = m_Cts.Token;
             var manager = new FileManager();
             var logger = new Logger("", "log.txt");
             var finder = new Finder();
-            var groups = finder.FindGroupOfSameFiles(m_CurrentPath, logger, manager);
-            Groups = groups;
+
+            var groups = finder.FindGroupOfSameFiles(m_CurrentPath, logger, manager, token);
+
+            e.Result = groups;
         }
 
         private void SetPathDialog()
@@ -446,20 +497,23 @@ namespace WpfSameFileFinder
                 CurrentPath = folderDialog.SelectedPath;
             }
         }
-
         private void FindDirectories()
         {
             ShowPopUp = true;
             try
             {
-                var di = new DirectoryInfo(CurrentPath);
-                Directories = di.GetDirectories("*.*", SearchOption.TopDirectoryOnly).ToList();
+                if (CurrentPath.EndsWith(@"\") && CurrentPath.Length > 1)
+                {
+                    var di = new DirectoryInfo(CurrentPath);
+                    Directories = di.GetDirectories("*.*", SearchOption.TopDirectoryOnly).ToList();
+                }
             }
             catch (Exception)
             {
             }
         }
     }
+
 
     public class DataGridLenthConverter : IValueConverter
     {
@@ -485,6 +539,31 @@ namespace WpfSameFileFinder
                 var length = (int)value;
                 return new DataGridLength(length);
             }
+        }
+    }
+    public class BooleanToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return (bool)value ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class InversBooleanToVisibilityConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return (bool)value ? Visibility.Collapsed : Visibility.Visible;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
         }
     }
 }

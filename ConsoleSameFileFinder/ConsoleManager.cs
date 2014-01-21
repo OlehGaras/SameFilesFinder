@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Globalization;
+using System.Threading;
 using SameFileFinder;
 
 namespace ConsoleSameFileFinder
@@ -29,7 +31,7 @@ namespace ConsoleSameFileFinder
                 }
 
                 string path = Args[1];
-                var groups = finder.FindGroupOfSameFiles(path, logger, fileManager);
+                var groups = finder.FindGroupOfSameFiles(path, logger, fileManager,new CancellationToken());
                 
                 if (groups.Count == 0)
                 {

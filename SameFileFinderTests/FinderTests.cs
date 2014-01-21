@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Threading;
 using NUnit.Framework;
 using FakeItEasy;
 using SameFileFinder;
@@ -17,7 +19,7 @@ namespace SameFileFinderTests
             var group = new FileGroup();
             group.Add(A.Fake<FileInfo>());
 
-            Assert.IsTrue(finder.CompareFiles(group,A<ILogger>.Ignored,A<IFileManager>.Ignored) == null);
+            Assert.IsTrue(finder.CompareFiles(group,A<ILogger>.Ignored,A<IFileManager>.Ignored,A<CancellationToken>.Ignored) == null);
         }
 
         [Test]
@@ -35,8 +37,8 @@ namespace SameFileFinderTests
             group.Add(firstFile);
             group.Add(secondfile);
 
-            A.CallTo(() => manager.ByteCompare(A<FileInfo>.Ignored, A<FileInfo>.Ignored, A<ILogger>.Ignored)).Returns(true);
-            var res = finder.CompareFiles(group, logger, manager);
+            A.CallTo(() => manager.ByteCompare(A<FileInfo>.Ignored, A<FileInfo>.Ignored, A<ILogger>.Ignored, A<CancellationToken>.Ignored)).Returns(true);
+            var res = finder.CompareFiles(group, logger, manager, A<CancellationToken>.Ignored);
 
             Assert.IsTrue(res.Count == 1);
         }
@@ -90,7 +92,7 @@ namespace SameFileFinderTests
 
             group.Add(A.Fake<FileInfo>());
 
-            Assert.IsTrue(finder.CheckTheGroup(group,A<ILogger>.Ignored,A<IFileManager>.Ignored) == null);
+            Assert.IsTrue(finder.CheckTheGroup(group, A<ILogger>.Ignored, A<IFileManager>.Ignored, A<CancellationToken>.Ignored) == null);
         }
 
         [Test]
@@ -136,9 +138,9 @@ namespace SameFileFinderTests
             var thirdFile = A.Fake<FileInfo>();
 
             A.CallTo(() => manager.DirSearch(A<string>.Ignored, logger)).Returns(new List<FileInfo>() { firstFile, secondFile, thirdFile });
-            A.CallTo(() => manager.ByteCompare(A<FileInfo>.Ignored, A<FileInfo>.Ignored, logger)).Returns(true);
+            A.CallTo(() => manager.ByteCompare(A<FileInfo>.Ignored, A<FileInfo>.Ignored, logger, A<CancellationToken>.Ignored)).Returns(true);
 
-            var result = finder.FindGroupOfSameFiles(A<string>.Ignored, logger, manager);
+            var result = finder.FindGroupOfSameFiles(A<string>.Ignored, logger, manager,A.Fake<CancellationToken>());
 
             Assert.IsTrue(result.Count > 0);
         }
@@ -150,7 +152,7 @@ namespace SameFileFinderTests
             var manager = A.Fake<IFileManager>();
             var logger = A.Fake<ILogger>();
 
-            var res = finder.FindGroupOfSameFiles(@"<>\Path", logger, manager);
+            var res = finder.FindGroupOfSameFiles(@"<>\Path", logger, manager, A.Fake<CancellationToken>());
 
             Assert.IsTrue(res == null);
         }
@@ -170,7 +172,7 @@ namespace SameFileFinderTests
 
             var finder = new Finder();
 
-            var res = finder.FindGroupOfSameFiles(A<string>.Ignored, logger, manager);
+            var res = finder.FindGroupOfSameFiles(A<string>.Ignored, logger, manager, A.Fake<CancellationToken>());
 
             Assert.IsTrue(res.Count == 0);
         }

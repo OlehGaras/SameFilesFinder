@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.IO;
 using System.Linq;
+using System.Threading;
 
 namespace SameFileFinder
 {
@@ -35,7 +36,7 @@ namespace SameFileFinder
             return files;
         }
 
-        public bool ByteCompare(FileInfo file1, FileInfo file2, ILogger logger)
+        public bool ByteCompare(FileInfo file1, FileInfo file2, ILogger logger,CancellationToken t)
         {
             if (file1 == null || file2 == null)
                 return false;
@@ -51,7 +52,7 @@ namespace SameFileFinder
                 var res2 = secondFile.Read(byte2, 0, byte2.Length);
                 while (res1 != 0 && res2 != 0)
                 {
-                    if (!ByteByByteCompare(byte1, byte2))
+                    if (!ByteByByteCompare(byte1, byte2) || t.IsCancellationRequested)
                     {
                         firstFile.Close();
                         secondFile.Close();
