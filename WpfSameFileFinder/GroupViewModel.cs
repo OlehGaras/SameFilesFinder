@@ -21,7 +21,6 @@ namespace WpfSameFileFinder
 
             set
             {
-                //Group.Files = value;
                 OnPropertyChanged("Files");
             }
         }

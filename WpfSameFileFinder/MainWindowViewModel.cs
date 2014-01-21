@@ -5,13 +5,14 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Forms;
 using System.Windows.Input;
 using SameFileFinder;
 using FileInfo = SameFileFinder.FileInfo;
-using KeyEventArgs = System.Windows.Forms.KeyEventArgs;
 using ListView = System.Windows.Controls.ListView;
+using TextBox = System.Windows.Controls.TextBox;
 
 namespace WpfSameFileFinder
 {
@@ -21,9 +22,73 @@ namespace WpfSameFileFinder
         private DelegateCommand m_SetThePath;
         private DelegateCommand m_EnterTheFolder;
         private DelegateCommand m_FindTheDirectories;
-        private DelegateCommand m_KeyDown;
+        private DelegateCommand m_OnTextBoxKeyPressed;
+        private DelegateCommand m_OnPopupKeyPressed;
+        private DelegateCommand m_GetPopup;
+        private DelegateCommand m_GetTb;
 
-        private int m_MaxWidth = 525;
+        private ListView m_Popup;
+        private TextBox m_Tb;
+
+        private const int InitialColumnWidth = 100;
+
+        private List<FileGroup> m_Groups;
+        public List<FileGroup> Groups
+        {
+            get { return m_Groups; }
+            set
+            {
+                if (value != m_Groups)
+                {
+                    m_Groups = value;
+                    OnPropertyChanged("Groups");
+                }
+            }
+        }
+
+        private FileInfo m_SelectedItem;
+        public FileInfo SelectedItem
+        {
+            get { return m_SelectedItem; }
+            set
+            {
+                if (m_SelectedItem != value)
+                {
+                    m_SelectedItem = value;
+                    OnPropertyChanged("SelectedItem");
+                }
+            }
+        }
+
+        private bool m_ShowPopUp;
+        public bool ShowPopUp
+        {
+            get { return m_ShowPopUp; }
+            set
+            {
+                if (value != m_ShowPopUp)
+                {
+                    m_ShowPopUp = value;
+                    OnPropertyChanged("ShowPopUp");
+                }
+            }
+        }
+
+        private List<DirectoryInfo> m_Directories;
+        public List<DirectoryInfo> Directories
+        {
+            get { return m_Directories; }
+            set
+            {
+                if (value != m_Directories)
+                {
+                    m_Directories = value;
+                    OnPropertyChanged("Directories");
+                }
+            }
+        }
+
+        private static int m_MaxWidth = 525;
         public int MaxWidth
         {
             get { return m_MaxWidth; }
@@ -31,9 +96,11 @@ namespace WpfSameFileFinder
             {
                 if (value != m_MaxWidth)
                 {
+                    m_HashWidth = m_MaxWidth-30 - m_PathWidth - m_NameWidth - m_LengthWidth;
                     m_MaxWidth = value;
-                    HashWidth = m_MaxWidth - LengthWidth - NameWidth - PathWidth;
+                    
                     OnPropertyChanged("MaxWidth");
+                    OnPropertyChanged("HashWidth");
                 }
             }
         }
@@ -52,18 +119,28 @@ namespace WpfSameFileFinder
             }
         }
 
-        private const int InitialColumnWidth = 60;
-
         private int m_PathWidth = InitialColumnWidth;
         public int PathWidth
         {
             get { return m_PathWidth; }
             set
             {
-                if (value != m_PathWidth)
+                if (value != m_PathWidth && m_NameWidth >= InitialColumnWidth)
                 {
+                    m_NameWidth += m_PathWidth - value;
                     m_PathWidth = value;
                     OnPropertyChanged("PathWidth");
+                    OnPropertyChanged("NameWidth");
+                }
+                else
+                {
+                    if (value < m_PathWidth)
+                    {
+                        m_NameWidth += m_PathWidth - value;
+                        m_PathWidth = value;
+                        OnPropertyChanged("PathWidth");
+                        OnPropertyChanged("NameWidth");
+                    }
                 }
             }
         }
@@ -74,11 +151,22 @@ namespace WpfSameFileFinder
             get { return m_NameWidth; }
             set
             {
-                if (value != m_NameWidth)
+                if (value != m_NameWidth && m_LengthWidth >= InitialColumnWidth)
                 {
+                    m_LengthWidth += m_NameWidth - value;
                     m_NameWidth = value;
                     OnPropertyChanged("NameWidth");
-
+                    OnPropertyChanged("LengthWidth");
+                }
+                else
+                {
+                    if (value < m_NameWidth)
+                    {
+                        m_LengthWidth += m_NameWidth - value;
+                        m_NameWidth = value;
+                        OnPropertyChanged("NameWidth");
+                        OnPropertyChanged("LengthWidth");
+                    }
                 }
             }
         }
@@ -89,26 +177,56 @@ namespace WpfSameFileFinder
             get { return m_LengthWidth; }
             set
             {
-                if (value != m_LengthWidth)
+                if (value != m_LengthWidth && m_HashWidth >= InitialColumnWidth)
                 {
-                    m_LengthWidth = value;
+                    m_HashWidth += m_LengthWidth - value;
+                    m_LengthWidth = value;                 
                     OnPropertyChanged("LengthWidth");
+                    OnPropertyChanged("HashWidth");
+                }
+                else
+                {
+                    if (value < m_LengthWidth)
+                    {
+                        m_HashWidth += m_LengthWidth - value;
+                        m_LengthWidth = value;
+                        OnPropertyChanged("LengthWidth");
+                        OnPropertyChanged("HashWidth");
+                    }
                 }
             }
         }
 
-        private int m_HashWidth = 525 - 3 * InitialColumnWidth;
+        private int m_HashWidth = m_MaxWidth - 3*InitialColumnWidth-30;
         public int HashWidth
         {
-            get { return m_HashWidth = MaxWidth - LengthWidth - NameWidth - PathWidth; }
+            get { return m_HashWidth ; }
             set
             {
                 if (value != m_HashWidth)
                 {
+
                     m_HashWidth = value;
                     OnPropertyChanged("HashWidth");
 
                 }
+                //if (value != m_HashWidth && m_HashWidth >= InitialColumnWidth)
+                //{
+                //    m_LengthWidth += m_HashWidth - value;
+                //    m_HashWidth = value;
+                //    OnPropertyChanged("HashWidth");
+                //    OnPropertyChanged("LengthWidth");
+                //}
+                //else
+                //{
+                //    if (value < m_HashWidth)
+                //    {
+                //        m_LengthWidth += m_HashWidth - value;
+                //        m_HashWidth = value;
+                //        OnPropertyChanged("HashWidth");
+                //        OnPropertyChanged("LengthWidth");
+                //    }
+                //}
             }
         }
 
@@ -127,6 +245,30 @@ namespace WpfSameFileFinder
                     FindDirectories();
                     OnPropertyChanged("CurrentPath");
                 }
+            }
+        }
+
+        public ICommand GetTb
+        {
+            get
+            {
+                if (m_GetTb == null)
+                {
+                    m_GetTb = new DelegateCommand(param => SaveTb(param));
+                }
+                return m_GetTb;
+            }
+        }
+
+        public ICommand GetPopup
+        {
+            get
+            {
+                if (m_GetPopup == null)
+                {
+                    m_GetPopup = new DelegateCommand(param => SavePopup(param));
+                }
+                return m_GetPopup;
             }
         }
 
@@ -172,80 +314,98 @@ namespace WpfSameFileFinder
             {
                 if (m_GetGroupsCommand == null)
                 {
-                    m_GetGroupsCommand = new DelegateCommand(param => GetGroupsOfFiles(), param => ValidPath());
+                    m_GetGroupsCommand = new DelegateCommand(param => GetGroupsOfFiles());
                 }
                 return m_GetGroupsCommand;
             }
         }
 
-        public ICommand KeyDown
+        public ICommand OnTextBoxKeyPressed
         {
             get
             {
-                if (m_KeyDown == null)
+                if (m_OnTextBoxKeyPressed == null)
                 {
-                    m_KeyDown = new DelegateCommand(param => KeyPressed(param));
+                    m_OnTextBoxKeyPressed = new DelegateCommand(param => OnTextBoxPressed(param));
                 }
-                return m_KeyDown;
+                return m_OnTextBoxKeyPressed;
             }
         }
 
-        public ICommand FocusAutoComplete
+        public ICommand OnPopupKeyPressed
         {
-            get { return new DelegateCommand(ExecuteFocus); }
-        }
-
-        private void ExecuteFocus(object o)
-        {
-            var listView = o as ListView;
-            if (listView != null)
+            get
             {
-                listView.Focus();
+                if (m_OnPopupKeyPressed == null)
+                {
+                    m_OnPopupKeyPressed = new DelegateCommand(param => OnPopupPressed(param));
+                }
+                return m_OnPopupKeyPressed;
             }
-
 
         }
 
-        private void KeyPressed(object o)
+        private void OnPopupPressed(object o)
         {
-            var k = (System.Windows.Input.KeyEventArgs) o;
+            if (!m_Popup.IsFocused)
+            {
+                m_Popup.Focus();
+                return;
+            }
+            var k = (System.Windows.Input.KeyEventArgs)o;
+            if (k.Key == Key.Up)
+            {
+                if (m_Popup.SelectedIndex > 0)
+                {
+                    m_Popup.SelectedIndex -= 1;
+                    return;
+                }
+                if (m_Tb != null)
+                {
+                    m_Tb.Focus();
+                }
+            }
             if (k.Key == Key.Down)
             {
-
+                if (m_Popup.SelectedIndex != m_Popup.Items.Count - 1)
+                    m_Popup.SelectedIndex += 1;
             }
-        }
-
-        private bool ValidPath()
-        {
-            return true;
-        }
-
-        private List<FileGroup> m_Groups;
-        public List<FileGroup> Groups
-        {
-            get { return m_Groups; }
-            set
+            if (k.Key == Key.Return)
             {
-                if (value != m_Groups)
+                CurrentPath += m_Popup.SelectedItem + @"\";
+                if (m_Tb != null)
                 {
-                    m_Groups = value;
-                    OnPropertyChanged("Groups");
+                    m_Tb.Focus();
+                    m_Tb.SelectionStart = m_Tb.Text.Length;
+                    if (m_Popup.Items.Count == 0)
+                    {
+                        ((Popup) m_Popup.Parent).IsOpen = false;
+                    }
                 }
             }
         }
 
-        private FileInfo m_SelectedItem;
-        public FileInfo SelectedItem
+        private void OnTextBoxPressed(object o)
         {
-            get { return m_SelectedItem; }
-            set
+            var k = (System.Windows.Input.KeyEventArgs)o;
+            if (k.Key == Key.Down)
             {
-                if (m_SelectedItem != value)
+                if (m_Popup != null)
                 {
-                    m_SelectedItem = value;
-                    OnPropertyChanged("SelectedItem");
+                    m_Popup.Focus();
                 }
             }
+
+        }
+
+        private void SavePopup(object o)
+        {
+            m_Popup = (ListView)((Popup)((StackPanel)o).Children[1]).Child;
+        }
+
+        private void SaveTb(object o)
+        {
+            m_Tb = (TextBox)((StackPanel)o).Children[0];
         }
 
         private void GoToTheFolder(object o)
@@ -274,46 +434,16 @@ namespace WpfSameFileFinder
 
         private void SetPathDialog()
         {
-            var folderDialog = new FolderBrowserDialog();
-            folderDialog.Description = @"Select folder to find similar files.";
+            var folderDialog = new FolderBrowserDialog
+                               {
+                                   Description = @"Select folder to find similar files.",
+                                   ShowNewFolderButton = false
+                               };
 
-            folderDialog.ShowNewFolderButton = false;
             DialogResult result = folderDialog.ShowDialog();
             if (result == DialogResult.OK)
             {
                 CurrentPath = folderDialog.SelectedPath;
-            }
-            else
-            {
-                System.Windows.Forms.MessageBox.Show(@"You have not selected or canceled Path selection popup");
-            }
-        }
-
-        private bool m_ShowPopUp;
-        public bool ShowPopUp
-        {
-            get { return m_ShowPopUp; }
-            set
-            {
-                if (value != m_ShowPopUp)
-                {
-                    m_ShowPopUp = value;
-                    OnPropertyChanged("ShowPopUp");
-                }
-            }
-        }
-
-        private List<DirectoryInfo> m_Directories;
-        public List<DirectoryInfo> Directories
-        {
-            get { return m_Directories; }
-            set
-            {
-                if (value != m_Directories)
-                {
-                    m_Directories = value;
-                    OnPropertyChanged("Directories");
-                }
             }
         }
 
