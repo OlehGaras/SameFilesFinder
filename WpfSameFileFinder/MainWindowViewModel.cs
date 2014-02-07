@@ -132,16 +132,16 @@ namespace WpfSameFileFinder
             }
         }
 
-        private static int m_MaxWidth = 525;
+        private static int ms_MaxWidth = 525;
         public int MaxWidth
         {
-            get { return m_MaxWidth; }
+            get { return ms_MaxWidth; }
             set
             {
-                if (value != m_MaxWidth)
+                if (value != ms_MaxWidth)
                 {
-                    m_HashWidth = m_MaxWidth - m_PathWidth - m_NameWidth - m_LengthWidth - 30;
-                    m_MaxWidth = value;
+                    m_HashWidth = ms_MaxWidth - m_PathWidth - m_NameWidth - m_LengthWidth - 30;
+                    ms_MaxWidth = value;
                     OnPropertyChanged("MaxWidth");
                     OnPropertyChanged("HashWidth");
                 }
@@ -217,7 +217,7 @@ namespace WpfSameFileFinder
             }
         }
 
-        private int m_HashWidth = m_MaxWidth - 3 * InitialColumnWidth - 30;
+        private int m_HashWidth = ms_MaxWidth - 3 * InitialColumnWidth - 30;
         public int HashWidth
         {
             get { return m_HashWidth; }
